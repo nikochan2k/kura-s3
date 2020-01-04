@@ -1,0 +1,62 @@
+{
+  "name": "kura-s3",
+  "version": "0.1.0",
+  "description": "The FileSystem API abstraction library, AWS S3 Plugin",
+  "author": "Yoshihiro Seki",
+  "license": "MIT",
+  "homepage": "https://github.com/nikochan2k/kura-s3",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "kura",
+    "FileSystem",
+    "storage",
+    "S3"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nikochan2k/kura-s3.git"
+  },
+  "scripts": {
+    "clean": "rimraf ./dist",
+    "compile": "tsc",
+    "build": "npm-run-all clean compile",
+    "test": "jest --runInBand"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "ts",
+      "tsx"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "tsconfig.json"
+      }
+    },
+    "testMatch": [
+      "**/src/__tests__/*.spec.+(ts|tsx|js)"
+    ],
+    "preset": "ts-jest"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.25",
+    "@types/node": "^13.1.1",
+    "jest": "^24.9.0",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^3.0.0",
+    "ts-jest": "^24.2.0",
+    "typescript": "^3.7.4"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.597.0",
+    "kura": "^0.1.5"
+  }
+}
