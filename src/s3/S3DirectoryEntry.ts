@@ -167,10 +167,7 @@ export class S3DirectoryEntry extends S3Entry implements DirectoryEntry {
         new S3DirectoryEntry({
           filesystem: filesystem,
           name: name,
-          fullPath: path,
-          lastModified: null,
-          size: null,
-          hash: null
+          fullPath: path
         })
       );
     } else {
@@ -181,10 +178,7 @@ export class S3DirectoryEntry extends S3Entry implements DirectoryEntry {
               new S3DirectoryEntry({
                 filesystem: filesystem,
                 name: name,
-                fullPath: path,
-                lastModified: null,
-                size: null,
-                hash: null
+                fullPath: path
               })
             );
             return;

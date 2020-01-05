@@ -2187,10 +2187,10 @@ kleur@^3.0.3:
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
-kura@^0.1.5:
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/kura/-/kura-0.1.5.tgz#79963b68fcd6dfa700126bdc3b2733e877677541"
-  integrity sha512-ziU1ldl1C5TUn7Vmy82ksjXjDO8VLYbTssBTFDCPEXWkRiVGh5BdKY8DfWEbgc4khuaVZbV4Vypnvsw6B1Ab1g==
+kura@^0.1.6:
+  version "0.1.6"
+  resolved "https://registry.yarnpkg.com/kura/-/kura-0.1.6.tgz#f536d0430efbf20d9abffc16015ee26e8dd5320d"
+  integrity sha512-rA7+CeXzJeBp8ZeuSkDz2k2dYMGJbxnARruQjIs7zWLDKA3Tgq5wS85B15BaGoEc8RCUwgsuMEDK65/Q+/m01A==
 
 left-pad@^1.3.0:
   version "1.3.0"

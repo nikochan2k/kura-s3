@@ -5,11 +5,14 @@ import {
   EntryCallback,
   ErrorCallback,
   FileSystemParams,
+  getName,
+  getParentPath,
   Metadata,
   MetadataCallback,
   NotImplementedError,
   VoidCallback
 } from "kura";
+import { S3DirectoryEntry } from "./S3DirectoryEntry";
 import { S3FileSystem } from "./S3FileSystem";
 
 export abstract class S3Entry implements Entry {
@@ -79,6 +82,13 @@ export abstract class S3Entry implements Entry {
     successCallback: DirectoryEntryCallback,
     errorCallback?: ErrorCallback
   ): void {
-    throw new Error("Method not implemented.");
+    const parentPath = getParentPath(this.fullPath);
+    successCallback(
+      new S3DirectoryEntry({
+        filesystem: this.filesystem,
+        name: getName(parentPath),
+        fullPath: parentPath
+      })
+    );
   }
 }

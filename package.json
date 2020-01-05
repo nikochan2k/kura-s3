@@ -5,11 +5,11 @@
   "author": "Yoshihiro Seki",
   "license": "MIT",
   "homepage": "https://github.com/nikochan2k/kura-s3",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "typings": "dist/index.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "typings": "lib/index.d.ts",
   "files": [
-    "dist"
+    "lib"
   ],
   "keywords": [
     "kura",
@@ -22,7 +22,7 @@
     "url": "https://github.com/nikochan2k/kura-s3.git"
   },
   "scripts": {
-    "clean": "rimraf ./dist",
+    "clean": "rimraf ./lib",
     "compile": "tsc",
     "build": "npm-run-all clean compile",
     "test": "jest --runInBand"
@@ -57,6 +57,6 @@
   },
   "dependencies": {
     "aws-sdk": "^2.597.0",
-    "kura": "^0.1.5"
+    "kura": "^0.1.6"
   }
 }

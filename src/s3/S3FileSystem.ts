@@ -14,9 +14,7 @@ export class S3FileSystem implements FileSystem {
     this.root = new S3DirectoryEntry({
       filesystem: this,
       name: "",
-      fullPath: DIR_SEPARATOR,
-      lastModified: null,
-      size: null
+      fullPath: DIR_SEPARATOR
     });
   }
 }
