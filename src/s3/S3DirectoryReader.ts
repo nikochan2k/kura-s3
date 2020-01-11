@@ -2,13 +2,13 @@ import {
   DIR_SEPARATOR,
   DirectoryReader,
   EntriesCallback,
+  Entry,
   ErrorCallback,
   onError
 } from "kura";
 import { getPrefix } from "./S3Util";
 import { ListObjectsV2Request } from "aws-sdk/clients/s3";
 import { S3DirectoryEntry } from "./S3DirectoryEntry";
-import { S3Entry } from "./S3Entry";
 import { S3FileEntry } from "./S3FileEntry";
 
 export class S3DirectoryReader implements DirectoryReader {
@@ -16,7 +16,7 @@ export class S3DirectoryReader implements DirectoryReader {
 
   doReadEntries(
     params: ListObjectsV2Request,
-    entries: S3Entry[],
+    entries: Entry[],
     successCallback: EntriesCallback,
     errorCallback?: ErrorCallback
   ) {
@@ -74,7 +74,7 @@ export class S3DirectoryReader implements DirectoryReader {
       ContinuationToken: null
     };
 
-    const entries: S3Entry[] = [];
+    const entries: Entry[] = [];
     this.doReadEntries(params, entries, successCallback, errorCallback);
   }
 }

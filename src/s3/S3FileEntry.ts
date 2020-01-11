@@ -1,15 +1,14 @@
 import {
+  AbstractFileEntry,
   blobToFile,
   ErrorCallback,
   FileCallback,
-  FileEntry,
   FileSystemParams,
   FileWriterCallback,
-  onError,
-  VoidCallback
+  onError
 } from "kura";
 import { getKey } from "./S3Util";
-import { S3Entry } from "./S3Entry";
+import { S3EntrySupport } from "./S3EntrySupport";
 import { S3FileSystem } from "./S3FileSystem";
 import { S3FileWriter } from "./S3FileWriter";
 
@@ -17,16 +16,11 @@ export interface S3FileParams extends FileSystemParams<S3FileSystem> {
   size: number;
 }
 
-export class S3FileEntry extends S3Entry implements FileEntry {
-  isFile = true;
-  isDirectory = false;
-  get size() {
-    return this.params.size;
-  }
+export class S3FileEntry extends AbstractFileEntry<S3FileSystem> {
   private s3FileWriter: S3FileWriter;
 
-  constructor(params: S3FileParams) {
-    super(params);
+  constructor(params: FileSystemParams<S3FileSystem>) {
+    super(params, new S3EntrySupport(params));
   }
 
   createWriter(
@@ -40,6 +34,13 @@ export class S3FileEntry extends S3Entry implements FileEntry {
     } else {
       successCallback(this.s3FileWriter);
     }
+  }
+
+  async delete(): Promise<void> {
+    const key = getKey(this.fullPath);
+    await this.filesystem.s3
+      .deleteObject({ Bucket: this.filesystem.bucket, Key: key })
+      .promise();
   }
 
   file(successCallback: FileCallback, errorCallback?: ErrorCallback): void {
@@ -80,22 +81,6 @@ export class S3FileEntry extends S3Entry implements FileEntry {
             onError(new Error("Unknown data type"), errorCallback);
           }
         }
-      }
-    );
-  }
-
-  remove(successCallback: VoidCallback, errorCallback?: ErrorCallback): void {
-    const key = getKey(this.fullPath);
-    this.filesystem.s3.deleteObject(
-      { Bucket: this.filesystem.bucket, Key: key },
-      err => {
-        if (err) {
-          if (err.statusCode !== 404) {
-            onError(err, errorCallback);
-            return;
-          }
-        }
-        successCallback();
       }
     );
   }
