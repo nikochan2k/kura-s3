@@ -1,80 +1,22 @@
-import {
-  DIR_SEPARATOR,
-  DirectoryReader,
-  EntriesCallback,
-  Entry,
-  ErrorCallback,
-  onError
-} from "kura";
-import { getPrefix } from "./S3Util";
-import { ListObjectsV2Request } from "aws-sdk/clients/s3";
+import { AbstractDirectoryReader, FileSystemObject } from "kura";
+import { S3Accessor } from "./S3Accessor";
 import { S3DirectoryEntry } from "./S3DirectoryEntry";
 import { S3FileEntry } from "./S3FileEntry";
 
-export class S3DirectoryReader implements DirectoryReader {
-  constructor(public dirEntry: S3DirectoryEntry, public used = false) {}
-
-  doReadEntries(
-    params: ListObjectsV2Request,
-    entries: Entry[],
-    successCallback: EntriesCallback,
-    errorCallback?: ErrorCallback
-  ) {
-    const fullPath = this.dirEntry.fullPath;
-    const filesystem = this.dirEntry.filesystem;
-    filesystem.s3.listObjectsV2(params, (err, data) => {
-      if (err) {
-        onError(err, errorCallback);
-        return;
-      }
-      for (const content of data.CommonPrefixes) {
-        const parts = content.Prefix.split(DIR_SEPARATOR);
-        const name = parts[parts.length - 2];
-        const newDirEntry = new S3DirectoryEntry({
-          filesystem: filesystem,
-          name: name,
-          fullPath: (fullPath === "/" ? "" : fullPath) + DIR_SEPARATOR + name,
-          lastModified: null,
-          size: null
-        });
-        entries.push(newDirEntry);
-      }
-      for (const content of data.Contents) {
-        const parts = content.Key.split(DIR_SEPARATOR);
-        const name = parts[parts.length - 1];
-        const newFileEntry = new S3FileEntry({
-          filesystem: filesystem,
-          name: name,
-          fullPath: (fullPath === "/" ? "" : fullPath) + DIR_SEPARATOR + name,
-          lastModified: content.LastModified.getTime(),
-          size: content.Size
-        });
-        entries.push(newFileEntry);
-      }
-
-      if (data.IsTruncated) {
-        params.ContinuationToken = data.NextContinuationToken;
-        this.doReadEntries(params, entries, successCallback, errorCallback);
-        return;
-      }
-      successCallback(entries);
-    });
+export class S3DirectoryReader extends AbstractDirectoryReader<S3Accessor> {
+  constructor(public dirEntry: S3DirectoryEntry) {
+    super(dirEntry);
   }
 
-  readEntries(
-    successCallback: EntriesCallback,
-    errorCallback?: ErrorCallback
-  ): void {
-    const fullPath = this.dirEntry.fullPath;
-    const prefix = getPrefix(fullPath);
-    const params: ListObjectsV2Request = {
-      Bucket: this.dirEntry.filesystem.bucket,
-      Delimiter: DIR_SEPARATOR,
-      Prefix: prefix,
-      ContinuationToken: null
-    };
-
-    const entries: Entry[] = [];
-    this.doReadEntries(params, entries, successCallback, errorCallback);
+  protected createEntry(obj: FileSystemObject) {
+    return obj.size != null
+      ? new S3FileEntry({
+          accessor: this.dirEntry.params.accessor,
+          ...obj
+        })
+      : new S3DirectoryEntry({
+          accessor: this.dirEntry.params.accessor,
+          ...obj
+        });
   }
 }
