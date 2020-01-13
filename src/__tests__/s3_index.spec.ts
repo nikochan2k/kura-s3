@@ -22,7 +22,11 @@ beforeAll(async () => {
     await s3.deleteObject({ Bucket: bucket, Key: content.Key }).promise();
   }
 
-  const factory = new S3LocalFileSystemAsync(config, "web-file-system-test");
+  const factory = new S3LocalFileSystemAsync(
+    config,
+    "web-file-system-test",
+    true
+  );
   fs = await factory.requestFileSystemAsync(
     window.PERSISTENT,
     Number.MAX_VALUE

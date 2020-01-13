@@ -1,23 +1,23 @@
 import {
   AbstractDirectoryEntry,
+  DIR_SEPARATOR,
   DirectoryEntry,
+  DirectoryEntryCallback,
   DirectoryReader,
+  ErrorCallback,
   FileEntry,
   FileSystemObject,
   FileSystemParams,
   Flags,
-  DirectoryEntryCallback,
-  ErrorCallback,
-  resolveToFullPath,
-  DIR_SEPARATOR
+  InvalidModificationError,
+  onError,
+  resolveToFullPath
 } from "kura";
 import { S3Accessor } from "./S3Accessor";
 import { S3DirectoryReader } from "./S3DirectoryReader";
 import { S3FileEntry } from "./S3FileEntry";
 
 export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
-  public static CheckDirectoryExistance = false;
-
   constructor(params: FileSystemParams<S3Accessor>) {
     super(params);
   }
@@ -32,21 +32,68 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
     successCallback?: DirectoryEntryCallback | undefined,
     errorCallback?: ErrorCallback | undefined
   ): void {
-    if (!S3DirectoryEntry.CheckDirectoryExistance) {
-      if (successCallback) {
-        path = resolveToFullPath(this.fullPath, path);
-        const name = path.split(DIR_SEPARATOR).pop();
-        successCallback(
-          new S3DirectoryEntry({
-            accessor: this.params.accessor,
+    path = resolveToFullPath(this.fullPath, path);
+
+    this.getDirectoryObject(path)
+      .then(obj => {
+        if (!options) {
+          options = {};
+        }
+        if (!successCallback) {
+          successCallback = () => {};
+        }
+
+        if (obj) {
+          if (obj.size != null) {
+            onError(
+              new InvalidModificationError(
+                this.filesystem.name,
+                path,
+                `${path} is not a directory`
+              ),
+              errorCallback
+            );
+            return;
+          }
+
+          if (options.create) {
+            if (options.exclusive) {
+              onError(
+                new InvalidModificationError(path, `${path} already exists`),
+                errorCallback
+              );
+              return;
+            }
+          }
+          successCallback(this.toDirectoryEntry(obj));
+        } else {
+          const name = path.split(DIR_SEPARATOR).pop();
+          const accessor = this.params.accessor;
+          const entry = new S3DirectoryEntry({
+            accessor: accessor,
             name: name,
             fullPath: path
-          })
-        );
-      }
-      return;
-    }
-    super.getDirectory(path, options, successCallback, errorCallback);
+          });
+          if (accessor.useIndex) {
+            accessor
+              .putIndex({
+                name: name,
+                fullPath: path
+              })
+              .then(() => {
+                successCallback(entry);
+              })
+              .catch(err => {
+                onError(err, errorCallback);
+              });
+          } else {
+            successCallback(entry);
+          }
+        }
+      })
+      .catch(err => {
+        onError(err, errorCallback);
+      });
   }
 
   toDirectoryEntry(obj: FileSystemObject): DirectoryEntry {

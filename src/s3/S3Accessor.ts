@@ -26,11 +26,27 @@ export class S3Accessor extends AbstractAccessor {
   }
 
   async getContent(fullPath: string) {
-    const data = await this.s3
-      .getObject({ Bucket: this.bucket, Key: getKey(fullPath) })
-      .promise();
-    const content = data.Body.valueOf();
-    return content as Blob;
+    try {
+      const data = await this.s3
+        .getObject({ Bucket: this.bucket, Key: getKey(fullPath) })
+        .promise();
+      const content = data.Body.valueOf();
+      let blob: Blob;
+      if (content instanceof Buffer) {
+        // Node
+        const buffer = content as Buffer;
+        blob = new Blob([buffer]);
+      } else {
+        // Browser
+        blob = content as Blob;
+      }
+      return blob;
+    } catch (err) {
+      if (err.statusCode === 404) {
+        return null;
+      }
+      throw err;
+    }
   }
 
   async getObject(fullPath: string): Promise<FileSystemObject> {
