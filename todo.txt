@@ -1,0 +1,1 @@
+・key.split(DIR_SEPARATOR).pop()は正規表現に直した方が速いかも？
