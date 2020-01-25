@@ -87,6 +87,9 @@ export class S3Accessor extends AbstractAccessor {
   }
 
   protected async doDelete(fullPath: string, isFile: boolean) {
+    if (!isFile) {
+      return;
+    }
     const key = getKey(fullPath);
     const params: DeleteObjectRequest = {
       Bucket: this.name,
