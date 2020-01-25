@@ -6,7 +6,7 @@ export class S3LocalFileSystemAsync extends LocalFileSystemAsync {
   constructor(
     config: S3.ClientConfiguration,
     bucket: string,
-    useIndex?: boolean
+    useIndex = false
   ) {
     super(new S3LocalFileSystem(config, bucket, useIndex));
   }

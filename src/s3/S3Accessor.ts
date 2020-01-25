@@ -17,11 +17,9 @@ export class S3Accessor extends AbstractAccessor {
   constructor(
     options: S3.ClientConfiguration,
     bucket: string,
-    temporary: boolean,
-    size: number,
     useIndex: boolean
   ) {
-    super(temporary, size, useIndex);
+    super(useIndex);
     this.s3 = new S3(options);
     this.filesystem = new S3FileSystem(this);
     this.name = bucket;
