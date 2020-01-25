@@ -16,10 +16,12 @@ export class S3Accessor extends AbstractAccessor {
 
   constructor(
     options: S3.ClientConfiguration,
-    public bucket: string,
+    bucket: string,
+    temporary: boolean,
+    size: number,
     useIndex: boolean
   ) {
-    super(useIndex);
+    super(temporary, size, useIndex);
     this.s3 = new S3(options);
     this.filesystem = new S3FileSystem(this);
     this.name = bucket;
@@ -28,7 +30,7 @@ export class S3Accessor extends AbstractAccessor {
   async getContent(fullPath: string) {
     try {
       const data = await this.s3
-        .getObject({ Bucket: this.bucket, Key: getKey(fullPath) })
+        .getObject({ Bucket: this.name, Key: getKey(fullPath) })
         .promise();
       const content = data.Body.valueOf();
       let blob: Blob;
@@ -54,7 +56,7 @@ export class S3Accessor extends AbstractAccessor {
     try {
       const data = await this.s3
         .headObject({
-          Bucket: this.bucket,
+          Bucket: this.name,
           Key: key
         })
         .promise();
@@ -76,7 +78,7 @@ export class S3Accessor extends AbstractAccessor {
   async hasChild(fullPath: string) {
     const prefix = getPrefix(fullPath);
     const param: AWS.S3.ListObjectsV2Request = {
-      Bucket: this.bucket,
+      Bucket: this.name,
       Prefix: prefix,
       Delimiter: DIR_SEPARATOR,
       MaxKeys: 1
@@ -89,7 +91,7 @@ export class S3Accessor extends AbstractAccessor {
   protected async doDelete(fullPath: string) {
     const key = getKey(fullPath);
     const params: DeleteObjectRequest = {
-      Bucket: this.bucket,
+      Bucket: this.name,
       Key: key
     };
     await this.s3.deleteObject(params).promise();
@@ -98,7 +100,7 @@ export class S3Accessor extends AbstractAccessor {
   protected async doGetObjects(fullPath: string) {
     const prefix = getPrefix(fullPath);
     const params: ListObjectsV2Request = {
-      Bucket: this.bucket,
+      Bucket: this.name,
       Delimiter: DIR_SEPARATOR,
       Prefix: prefix,
       ContinuationToken: null
@@ -161,7 +163,7 @@ export class S3Accessor extends AbstractAccessor {
     }
     await this.s3
       .putObject({
-        Bucket: this.bucket,
+        Bucket: this.name,
         Key: getKey(fullPath),
         Body: body
       })
@@ -171,7 +173,7 @@ export class S3Accessor extends AbstractAccessor {
   protected async doPutObject(obj: FileSystemObject) {
     const key = getKey(obj.fullPath);
     const request: S3.PutObjectRequest = {
-      Bucket: this.bucket,
+      Bucket: this.name,
       Key: key,
       Body: "",
       ContentType: "application/octet-stream"

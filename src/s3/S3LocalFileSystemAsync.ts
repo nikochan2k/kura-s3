@@ -4,7 +4,7 @@ import { S3LocalFileSystem } from "./S3LocalFileSystem";
 
 export class S3LocalFileSystemAsync extends LocalFileSystemAsync {
   constructor(
-    private config: S3.ClientConfiguration,
+    config: S3.ClientConfiguration,
     bucket: string,
     useIndex?: boolean
   ) {
