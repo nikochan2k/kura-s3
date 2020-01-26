@@ -159,6 +159,9 @@ export class S3Accessor extends AbstractAccessor {
   }
 
   protected async doPutObject(obj: FileSystemObject) {
+    if (obj.size == null) {
+      return;
+    }
     const key = getKey(obj.fullPath);
     const request: S3.PutObjectRequest = {
       Bucket: this.name,
