@@ -76,7 +76,7 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
           });
           if (accessor.useIndex) {
             accessor
-              .putIndex({
+              .updateIndex({
                 name: name,
                 fullPath: path
               })

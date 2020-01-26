@@ -73,19 +73,6 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  async hasChild(fullPath: string) {
-    const prefix = getPrefix(fullPath);
-    const param: AWS.S3.ListObjectsV2Request = {
-      Bucket: this.name,
-      Prefix: prefix,
-      Delimiter: DIR_SEPARATOR,
-      MaxKeys: 1
-    };
-
-    const data = await this.s3.listObjectsV2(param).promise();
-    return 0 < data.CommonPrefixes.length || 0 < data.Contents.length;
-  }
-
   protected async doDelete(fullPath: string, isFile: boolean) {
     if (!isFile) {
       return;
