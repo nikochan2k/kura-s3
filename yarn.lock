@@ -2399,10 +2399,10 @@ kleur@^3.0.3:
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
-kura@^0.1.34:
-  version "0.1.34"
-  resolved "https://registry.yarnpkg.com/kura/-/kura-0.1.34.tgz#e90d47610730dd09ccd9044dc12ddb30f892c152"
-  integrity sha512-w4IV0k0z3pKqt0hlBY9r/QbkWKcl6G7iuRHY/bdXSNpRfGgFoo202krxm3f2C6JQK3zQmPO3JjPD83sTUIej1A==
+kura@^0.1.37:
+  version "0.1.37"
+  resolved "https://registry.yarnpkg.com/kura/-/kura-0.1.37.tgz#c7e891c1d8543ee08a2fde67003db533781ed0b1"
+  integrity sha512-C/zt6kQJfyr4ybikN4bC3lBMgQ9sAh5LcjeMfe8t0gJyxWJxAy++3HpBNOMmun8WFQK+UTb19V8s7LQvwYAjxg==
 
 leven@^3.1.0:
   version "3.1.0"

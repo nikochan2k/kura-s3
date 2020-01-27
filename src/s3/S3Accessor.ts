@@ -2,7 +2,8 @@ import {
   AbstractAccessor,
   DIR_SEPARATOR,
   FileSystem,
-  FileSystemObject
+  FileSystemObject,
+  Permission
 } from "kura";
 import { DeleteObjectRequest, ListObjectsV2Request } from "aws-sdk/clients/s3";
 import { getKey, getPrefix } from "./S3Util";
@@ -17,15 +18,15 @@ export class S3Accessor extends AbstractAccessor {
   constructor(
     options: S3.ClientConfiguration,
     bucket: string,
-    useIndex: boolean
+    permission: Permission
   ) {
-    super(useIndex);
+    super(permission);
     this.s3 = new S3(options);
     this.filesystem = new S3FileSystem(this);
     this.name = bucket;
   }
 
-  async getContent(fullPath: string) {
+  async doGetContent(fullPath: string) {
     try {
       const data = await this.s3
         .getObject({ Bucket: this.name, Key: getKey(fullPath) })
@@ -49,7 +50,7 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  async getObject(fullPath: string): Promise<FileSystemObject> {
+  async doGetObject(fullPath: string): Promise<FileSystemObject> {
     const key = getKey(fullPath);
     try {
       const data = await this.s3
