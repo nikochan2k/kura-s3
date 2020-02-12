@@ -3,7 +3,8 @@ import {
   DirectoryEntryAsync,
   FileSystemAsync,
   InvalidModificationError,
-  NotFoundError
+  NotFoundError,
+  PathExistsError
 } from "kura";
 import { S3 } from "aws-sdk";
 import { S3LocalFileSystemAsync } from "../s3/S3LocalFileSystemAsync";
@@ -58,7 +59,7 @@ test("add text file", async done => {
   expect(fileEntry.isFile).toBe(true);
 
   let writer = await fileEntry.createWriter();
-  await writer.write(new Blob(["hoge"], { type: "text/plain" }));
+  await writer.writeFile(new Blob(["hoge"], { type: "text/plain" }));
   expect(writer.position).toBe(4);
   let file = await fileEntry.file();
   expect(file.size).toBe(4);
@@ -75,7 +76,7 @@ test("add text file", async done => {
     });
     fail();
   } catch (e) {
-    expect(e).toBeInstanceOf(InvalidModificationError);
+    expect(e).toBeInstanceOf(PathExistsError);
   }
   fileEntry = await fs.root.getFile("test.txt");
   file = await fileEntry.file();
