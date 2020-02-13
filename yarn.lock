@@ -691,10 +691,10 @@ atob@^2.1.1:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
-aws-sdk@^2.616.0:
-  version "2.616.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.616.0.tgz#c8772f2cde6e250ce126747e6f995aa969f0632a"
-  integrity sha512-jvmUn5WgL7EQz3e40tDpmCQA2RlchMZkxp/yVOYv4eKVrW5Mxz4QVnPqIWXutK6Ml3C3/DBMR0uIQybztvSrGA==
+aws-sdk@^2.617.0:
+  version "2.617.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.617.0.tgz#aa040a75b78494dafdec9c6cce9dc0b6933e19d7"
+  integrity sha512-08CVFCHdLgSqXC5kHDDyuCf62qgzJnzHcZEgSd64zM91VaQqFzGIqi/b9iTtE47JKl1UIvrj7v8g+LPrfrGULQ==
   dependencies:
     buffer "4.9.1"
     events "1.1.1"
@@ -760,6 +760,11 @@ balanced-match@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.0.tgz#89b4d199ab2bee49de164ea02b89ce462d71b767"
   integrity sha1-ibTRmasr7kneFk6gK4nORi1xt2c=
+
+base-64@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/base-64/-/base-64-0.1.0.tgz#780a99c84e7d600260361511c4877613bf24f6bb"
+  integrity sha1-eAqZyE59YAJgNhURxId2E78k9rs=
 
 base64-js@^1.0.2:
   version "1.3.1"
@@ -2364,10 +2369,12 @@ kleur@^3.0.3:
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
-kura@^0.1.39:
-  version "0.1.39"
-  resolved "https://registry.yarnpkg.com/kura/-/kura-0.1.39.tgz#c805bc1bca93ae6add254d2f840e9e92e47edbb1"
-  integrity sha512-Mli9G0RvXlyImqvv6SpIu/eDG3gZFdN/vDuXgBYmMlUyeVNCkiSGrWURt4NqbvwvRet6FQb11je40mLcFSD5ww==
+kura@^0.1.41:
+  version "0.1.41"
+  resolved "https://registry.yarnpkg.com/kura/-/kura-0.1.41.tgz#943211c6889b96408089673b8bc1e84a0b6aad00"
+  integrity sha512-RbGQMbswaLmXM/0RxlFvirbzO3Pxyb4/9BBfnCU5WD/KT7Wr+JSOXkQxsKhcDy/FN48IxBR2X0UtMAgOYoG7TQ==
+  dependencies:
+    base-64 "^0.1.0"
 
 leven@^3.1.0:
   version "3.1.0"
