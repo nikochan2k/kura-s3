@@ -32,10 +32,10 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
     successCallback?: DirectoryEntryCallback | undefined,
     errorCallback?: ErrorCallback | undefined
   ): void {
-    path = resolveToFullPath(this.fullPath, path);
+    const fullPath = resolveToFullPath(this.fullPath, path);
 
-    this.getDirectoryObject(path)
-      .then(obj => {
+    this.getDirectoryObject(fullPath)
+      .then(async obj => {
         if (!options) {
           options = {};
         }
@@ -48,8 +48,8 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
             onError(
               new InvalidModificationError(
                 this.filesystem.name,
-                path,
-                `${path} is not a directory`
+                fullPath,
+                `${fullPath} is not a directory`
               ),
               errorCallback
             );
@@ -59,7 +59,10 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
           if (options.create) {
             if (options.exclusive) {
               onError(
-                new InvalidModificationError(path, `${path} already exists`),
+                new InvalidModificationError(
+                  fullPath,
+                  `${fullPath} already exists`
+                ),
                 errorCallback
               );
               return;
@@ -67,18 +70,18 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
           }
           successCallback(this.toDirectoryEntry(obj));
         } else {
-          const name = path.split(DIR_SEPARATOR).pop();
+          const name = fullPath.split(DIR_SEPARATOR).pop();
           const accessor = this.params.accessor;
           const entry = new S3DirectoryEntry({
             accessor: accessor,
             name: name,
-            fullPath: path
+            fullPath: fullPath
           });
           if (accessor.hasIndex) {
             accessor
               .updateIndex({
                 name: name,
-                fullPath: path
+                fullPath: fullPath
               })
               .then(() => {
                 successCallback(entry);
@@ -96,14 +99,14 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
       });
   }
 
-  toDirectoryEntry(obj: FileSystemObject): DirectoryEntry {
+  protected toDirectoryEntry(obj: FileSystemObject): DirectoryEntry {
     return new S3DirectoryEntry({
       accessor: this.params.accessor,
       ...obj
     });
   }
 
-  toFileEntry(obj: FileSystemObject): FileEntry {
+  protected toFileEntry(obj: FileSystemObject): FileEntry {
     return new S3FileEntry({
       accessor: this.params.accessor,
       ...obj

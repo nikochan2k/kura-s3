@@ -26,7 +26,28 @@ export class S3Accessor extends AbstractAccessor {
     this.name = bucket;
   }
 
-  async doGetContent(fullPath: string) {
+  async resetObject(fullPath: string, size?: number) {
+    const obj = await this.doGetObject(fullPath);
+    if (!obj) {
+      return null;
+    }
+    await this.putObject(obj);
+    return obj;
+  }
+
+  protected async doDelete(fullPath: string, isFile: boolean) {
+    if (!isFile) {
+      return;
+    }
+    const key = getKey(fullPath);
+    const params: DeleteObjectRequest = {
+      Bucket: this.name,
+      Key: key
+    };
+    await this.s3.deleteObject(params).promise();
+  }
+
+  protected async doGetContent(fullPath: string) {
     try {
       const data = await this.s3
         .getObject({ Bucket: this.name, Key: getKey(fullPath) })
@@ -50,7 +71,7 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  async doGetObject(fullPath: string): Promise<FileSystemObject> {
+  protected async doGetObject(fullPath: string): Promise<FileSystemObject> {
     const key = getKey(fullPath);
     try {
       const data = await this.s3
@@ -72,18 +93,6 @@ export class S3Accessor extends AbstractAccessor {
       }
       throw err;
     }
-  }
-
-  protected async doDelete(fullPath: string, isFile: boolean) {
-    if (!isFile) {
-      return;
-    }
-    const key = getKey(fullPath);
-    const params: DeleteObjectRequest = {
-      Bucket: this.name,
-      Key: key
-    };
-    await this.s3.deleteObject(params).promise();
   }
 
   protected async doGetObjects(fullPath: string) {
