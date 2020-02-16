@@ -1,3 +1,4 @@
+import { DeleteObjectRequest, ListObjectsV2Request } from "aws-sdk/clients/s3";
 import {
   AbstractAccessor,
   DIR_SEPARATOR,
@@ -5,9 +6,8 @@ import {
   FileSystemObject,
   Permission
 } from "kura";
-import { DeleteObjectRequest, ListObjectsV2Request } from "aws-sdk/clients/s3";
-import { getKey, getPrefix } from "./S3Util";
 import { S3FileSystem } from "./S3FileSystem";
+import { getKey, getPrefix } from "./S3Util";
 import S3 = require("aws-sdk/clients/s3");
 
 export class S3Accessor extends AbstractAccessor {
@@ -168,17 +168,5 @@ export class S3Accessor extends AbstractAccessor {
       .promise();
   }
 
-  protected async doPutObject(obj: FileSystemObject) {
-    if (obj.size == null) {
-      return;
-    }
-    const key = getKey(obj.fullPath);
-    const request: S3.PutObjectRequest = {
-      Bucket: this.name,
-      Key: key,
-      Body: "",
-      ContentType: "application/octet-stream"
-    };
-    await this.s3.putObject(request).promise();
-  }
+  protected async doPutObject(obj: FileSystemObject) {}
 }
