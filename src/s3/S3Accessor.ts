@@ -4,7 +4,8 @@ import {
   DIR_SEPARATOR,
   FileSystem,
   FileSystemObject,
-  Permission
+  Permission,
+  normalizePath
 } from "kura";
 import { S3FileSystem } from "./S3FileSystem";
 import { getKey, getPrefix } from "./S3Util";
@@ -17,17 +18,19 @@ export class S3Accessor extends AbstractAccessor {
 
   constructor(
     options: S3.ClientConfiguration,
-    bucket: string,
+    private bucket: string,
+    private rootDir: string,
     permission: Permission
   ) {
     super(permission);
     this.s3 = new S3(options);
     this.filesystem = new S3FileSystem(this);
-    this.name = bucket;
+    this.name = bucket + rootDir;
   }
 
   async resetObject(fullPath: string, size?: number) {
-    const obj = await this.doGetObject(fullPath);
+    const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
+    const obj = await this.doGetObject(path);
     if (!obj) {
       return null;
     }
@@ -39,9 +42,10 @@ export class S3Accessor extends AbstractAccessor {
     if (!isFile) {
       return;
     }
-    const key = getKey(fullPath);
+    const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
+    const key = getKey(path);
     const params: DeleteObjectRequest = {
-      Bucket: this.name,
+      Bucket: this.bucket,
       Key: key
     };
     await this.s3.deleteObject(params).promise();
@@ -49,8 +53,10 @@ export class S3Accessor extends AbstractAccessor {
 
   protected async doGetContent(fullPath: string) {
     try {
+      const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
+      const key = getKey(path);
       const data = await this.s3
-        .getObject({ Bucket: this.name, Key: getKey(fullPath) })
+        .getObject({ Bucket: this.bucket, Key: key })
         .promise();
       const content = data.Body.valueOf();
       let blob: Blob;
@@ -72,18 +78,19 @@ export class S3Accessor extends AbstractAccessor {
   }
 
   protected async doGetObject(fullPath: string): Promise<FileSystemObject> {
-    const key = getKey(fullPath);
+    const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
+    const key = getKey(path);
     try {
       const data = await this.s3
         .headObject({
-          Bucket: this.name,
+          Bucket: this.bucket,
           Key: key
         })
         .promise();
       const name = key.split(DIR_SEPARATOR).pop();
       return {
         name: name,
-        fullPath: DIR_SEPARATOR + key,
+        fullPath: fullPath,
         lastModified: data.LastModified.getTime(),
         size: data.ContentLength
       };
@@ -95,31 +102,34 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  protected async doGetObjects(fullPath: string) {
-    const prefix = getPrefix(fullPath);
+  protected async doGetObjects(dirPath: string) {
+    const path = normalizePath(this.rootDir + DIR_SEPARATOR + dirPath);
+    const prefix = getPrefix(path);
     const params: ListObjectsV2Request = {
-      Bucket: this.name,
+      Bucket: this.bucket,
       Delimiter: DIR_SEPARATOR,
       Prefix: prefix,
       ContinuationToken: null
     };
     const objects: FileSystemObject[] = [];
-    await this.doGetObjectsFromS3(params, fullPath, objects);
+    await this.doGetObjectsFromS3(params, dirPath, path, objects);
     return objects;
   }
 
   protected async doGetObjectsFromS3(
     params: ListObjectsV2Request,
-    fullPath: string,
+    dirPath: string,
+    path: string,
     objects: FileSystemObject[]
   ) {
     const data = await this.s3.listObjectsV2(params).promise();
     for (const content of data.CommonPrefixes) {
       const parts = content.Prefix.split(DIR_SEPARATOR);
       const name = parts[parts.length - 2];
+      const fullPath = normalizePath(dirPath + DIR_SEPARATOR + name);
       objects.push({
         name: name,
-        fullPath: (fullPath === "/" ? "" : fullPath) + DIR_SEPARATOR + name,
+        fullPath: fullPath,
         lastModified: null,
         size: null
       });
@@ -127,9 +137,10 @@ export class S3Accessor extends AbstractAccessor {
     for (const content of data.Contents) {
       const parts = content.Key.split(DIR_SEPARATOR);
       const name = parts[parts.length - 1];
+      const fullPath = normalizePath(dirPath + DIR_SEPARATOR + name);
       objects.push({
         name: name,
-        fullPath: (fullPath === "/" ? "" : fullPath) + DIR_SEPARATOR + name,
+        fullPath: fullPath,
         lastModified: content.LastModified.getTime(),
         size: content.Size
       });
@@ -137,7 +148,7 @@ export class S3Accessor extends AbstractAccessor {
 
     if (data.IsTruncated) {
       params.ContinuationToken = data.NextContinuationToken;
-      await this.doGetObjectsFromS3(params, fullPath, objects);
+      await this.doGetObjectsFromS3(params, dirPath, path, objects);
     }
   }
 
@@ -159,10 +170,12 @@ export class S3Accessor extends AbstractAccessor {
       // Browser
       body = content;
     }
+    const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
+    const key = getKey(path);
     await this.s3
       .putObject({
-        Bucket: this.name,
-        Key: getKey(fullPath),
+        Bucket: this.bucket,
+        Key: key,
         Body: body
       })
       .promise();

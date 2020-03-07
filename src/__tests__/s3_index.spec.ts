@@ -9,10 +9,12 @@ const config: S3.ClientConfiguration = {
   s3ForcePathStyle: true, // needed with minio?
   signatureVersion: "v4"
 };
-const factory = new S3LocalFileSystemAsync(config, "web-file-system-test");
-testAll(factory);
-
-(async () => {
+const factory = new S3LocalFileSystemAsync(
+  config,
+  "web-file-system-test",
+  "example"
+);
+testAll(factory, async () => {
   const s3 = new S3(config);
   const bucket = "web-file-system-test";
   try {
@@ -22,4 +24,4 @@ testAll(factory);
   for (const content of list.Contents) {
     await s3.deleteObject({ Bucket: bucket, Key: content.Key }).promise();
   }
-})();
+});
