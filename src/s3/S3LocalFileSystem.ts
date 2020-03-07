@@ -1,10 +1,10 @@
+import { S3 } from "aws-sdk";
 import {
   AbstractAccessor,
   AbstractLocalFileSystem,
-  Permission,
-  LAST_DIR_SEPARATORS
+  normalizePath,
+  Permission
 } from "kura";
-import { S3 } from "aws-sdk";
 import { S3Accessor } from "./S3Accessor";
 
 export class S3LocalFileSystem extends AbstractLocalFileSystem {
@@ -30,7 +30,7 @@ export class S3LocalFileSystem extends AbstractLocalFileSystem {
     value?: any
   ) {
     super(value);
-    this.rootDir = rootDir.replace(LAST_DIR_SEPARATORS, "");
+    this.rootDir = normalizePath(rootDir);
   }
 
   protected createAccessor(): Promise<AbstractAccessor> {
