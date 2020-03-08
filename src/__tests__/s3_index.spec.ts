@@ -1,6 +1,8 @@
 import { S3 } from "aws-sdk";
-import { testAll } from "kura";
+import { AbstractAccessor, testAll } from "kura";
 import { S3LocalFileSystemAsync } from "../s3/S3LocalFileSystemAsync";
+
+AbstractAccessor.PUT_INDEX_THROTTLE = 0;
 
 const config: S3.ClientConfiguration = {
   accessKeyId: "KFS0LZVKZ8G456A502L3",
@@ -12,7 +14,8 @@ const config: S3.ClientConfiguration = {
 const factory = new S3LocalFileSystemAsync(
   config,
   "web-file-system-test",
-  "example"
+  "example",
+  true
 );
 testAll(factory, async () => {
   const s3 = new S3(config);
