@@ -60,10 +60,10 @@ export class S3Accessor extends AbstractAccessor {
       }
       return blob;
     } catch (err) {
-      if (err.statusCode === 404) {
-        return null;
+      if (err.statusCode !== 404) {
+        console.error(err);
       }
-      throw err;
+      return null;
     }
   }
 
@@ -85,10 +85,10 @@ export class S3Accessor extends AbstractAccessor {
         size: data.ContentLength
       };
     } catch (err) {
-      if (err.statusCode === 404) {
-        return null;
+      if (err.statusCode !== 404) {
+        console.error(err);
       }
-      throw err;
+      return null;
     }
   }
 
