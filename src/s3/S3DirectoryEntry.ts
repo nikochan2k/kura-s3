@@ -1,9 +1,9 @@
 import {
   AbstractDirectoryEntry,
-  DIR_SEPARATOR,
   DirectoryEntry,
   DirectoryEntryCallback,
   DirectoryReader,
+  DIR_SEPARATOR,
   ErrorCallback,
   FileEntry,
   FileSystemObject,
@@ -77,7 +77,7 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
             name: name,
             fullPath: fullPath
           });
-          if (accessor.hasIndex) {
+          if (accessor.options.useIndex) {
             accessor
               .updateIndex({
                 name: name,

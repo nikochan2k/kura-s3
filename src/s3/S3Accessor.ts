@@ -4,9 +4,9 @@ import {
   DIR_SEPARATOR,
   FileSystem,
   FileSystemObject,
-  Permission,
   normalizePath
 } from "kura";
+import { FileSystemOptions } from "kura/lib/FileSystemOptions";
 import { S3FileSystem } from "./S3FileSystem";
 import { getKey, getPrefix } from "./S3Util";
 import S3 = require("aws-sdk/clients/s3");
@@ -17,18 +17,28 @@ export class S3Accessor extends AbstractAccessor {
   s3: S3;
 
   constructor(
-    options: S3.ClientConfiguration,
+    config: S3.ClientConfiguration,
     private bucket: string,
     private rootDir: string,
-    permission: Permission
+    options?: FileSystemOptions
   ) {
-    super(permission);
-    this.s3 = new S3(options);
+    super(options);
+    this.s3 = new S3(config);
     this.filesystem = new S3FileSystem(this);
     this.name = bucket + rootDir;
   }
 
-  async doDelete(fullPath: string, isFile: boolean) {
+  async resetObject(fullPath: string, size?: number) {
+    const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
+    const obj = await this.doGetObject(path);
+    if (!obj) {
+      return null;
+    }
+    await this.putObject(obj);
+    return obj;
+  }
+
+  protected async doDelete(fullPath: string, isFile: boolean) {
     if (!isFile) {
       return;
     }
@@ -41,7 +51,7 @@ export class S3Accessor extends AbstractAccessor {
     await this.s3.deleteObject(params).promise();
   }
 
-  async doGetContent(fullPath: string) {
+  protected async doGetContent(fullPath: string) {
     try {
       const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
       const key = getKey(path);
@@ -67,7 +77,7 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  async doGetObject(fullPath: string): Promise<FileSystemObject> {
+  protected async doGetObject(fullPath: string): Promise<FileSystemObject> {
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
     const key = getKey(path);
     try {
@@ -92,7 +102,7 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  async doGetObjects(dirPath: string) {
+  protected async doGetObjects(dirPath: string) {
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + dirPath);
     const prefix = getPrefix(path);
     const params: ListObjectsV2Request = {
@@ -104,47 +114,6 @@ export class S3Accessor extends AbstractAccessor {
     const objects: FileSystemObject[] = [];
     await this.doGetObjectsFromS3(params, dirPath, path, objects);
     return objects;
-  }
-
-  async doPutContent(fullPath: string, content: Blob) {
-    let body: any;
-    if (typeof process === "object") {
-      // Node
-      const sendData = await new Promise<Uint8Array>(resolve => {
-        const fileReader = new FileReader();
-        fileReader.onloadend = event => {
-          const data = event.target.result as ArrayBuffer;
-          const byte = new Uint8Array(data);
-          resolve(byte);
-        };
-        fileReader.readAsArrayBuffer(content);
-      });
-      body = Buffer.from(sendData);
-    } else {
-      // Browser
-      body = content;
-    }
-    const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
-    const key = getKey(path);
-    await this.s3
-      .putObject({
-        Bucket: this.bucket,
-        Key: key,
-        Body: body
-      })
-      .promise();
-  }
-
-  async doPutObject(obj: FileSystemObject) {}
-
-  async resetObject(fullPath: string, size?: number) {
-    const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
-    const obj = await this.doGetObject(path);
-    if (!obj) {
-      return null;
-    }
-    await this.putObject(obj);
-    return obj;
   }
 
   protected async doGetObjectsFromS3(
@@ -182,4 +151,35 @@ export class S3Accessor extends AbstractAccessor {
       await this.doGetObjectsFromS3(params, dirPath, path, objects);
     }
   }
+
+  protected async doPutContent(fullPath: string, content: Blob) {
+    let body: any;
+    if (typeof process === "object") {
+      // Node
+      const sendData = await new Promise<Uint8Array>(resolve => {
+        const fileReader = new FileReader();
+        fileReader.onloadend = event => {
+          const data = event.target.result as ArrayBuffer;
+          const byte = new Uint8Array(data);
+          resolve(byte);
+        };
+        fileReader.readAsArrayBuffer(content);
+      });
+      body = Buffer.from(sendData);
+    } else {
+      // Browser
+      body = content;
+    }
+    const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
+    const key = getKey(path);
+    await this.s3
+      .putObject({
+        Bucket: this.bucket,
+        Key: key,
+        Body: body
+      })
+      .promise();
+  }
+
+  protected async doPutObject(obj: FileSystemObject) {}
 }

@@ -1,36 +1,19 @@
 import { S3 } from "aws-sdk";
-import {
-  AbstractAccessor,
-  AbstractLocalFileSystem,
-  normalizePath,
-  Permission
-} from "kura";
+import { AbstractAccessor, AbstractLocalFileSystem, normalizePath } from "kura";
+import { FileSystemOptions } from "kura/lib/FileSystemOptions";
 import { S3Accessor } from "./S3Accessor";
 
 export class S3LocalFileSystem extends AbstractLocalFileSystem {
   private rootDir: string;
 
-  constructor(config: S3.ClientConfiguration, bucket: string, rootDir: string);
-  constructor(
-    config: S3.ClientConfiguration,
-    bucket: string,
-    roorDir: string,
-    useIndex: boolean
-  );
-  constructor(
-    config: S3.ClientConfiguration,
-    bucket: string,
-    roorDir: string,
-    permission: Permission
-  );
   constructor(
     private config: S3.ClientConfiguration,
     private bucket: string,
-    rootDir: string,
-    value?: any
+    roorDir: string,
+    options?: FileSystemOptions
   ) {
-    super(value);
-    this.rootDir = normalizePath(rootDir);
+    super(options);
+    this.rootDir = normalizePath(roorDir);
   }
 
   protected createAccessor(): Promise<AbstractAccessor> {
@@ -39,7 +22,7 @@ export class S3LocalFileSystem extends AbstractLocalFileSystem {
         this.config,
         this.bucket,
         this.rootDir,
-        this.permission
+        this.options
       );
       resolve(accessor);
     });

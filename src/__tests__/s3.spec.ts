@@ -12,7 +12,8 @@ const config: S3.ClientConfiguration = {
 const factory = new S3LocalFileSystemAsync(
   config,
   "web-file-system-test",
-  "/example/"
+  "/example/",
+  { verbose: true }
 );
 testAll(factory, async () => {
   const s3 = new S3(config);
