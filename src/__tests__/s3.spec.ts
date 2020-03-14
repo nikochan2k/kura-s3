@@ -1,5 +1,5 @@
 import { S3 } from "aws-sdk";
-import { testAll } from "kura";
+import { testAll } from "../../node_modules/kura/lib/__tests__/filesystem";
 import { S3LocalFileSystemAsync } from "../s3/S3LocalFileSystemAsync";
 
 const config: S3.ClientConfiguration = {
