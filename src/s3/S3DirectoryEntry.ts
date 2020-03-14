@@ -10,6 +10,7 @@ import {
   FileSystemParams,
   Flags,
   InvalidModificationError,
+  NotFoundError,
   onError,
   resolveToFullPath
 } from "kura";
@@ -34,8 +35,14 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
   ): void {
     const fullPath = resolveToFullPath(this.fullPath, path);
 
-    this.getDirectoryObject(fullPath)
+    this.params.accessor
+      .getObject(fullPath)
       .then(async obj => {
+        if (fullPath === "/") {
+          successCallback(this.filesystem.root);
+          return;
+        }
+
         if (!options) {
           options = {};
         }
@@ -43,33 +50,34 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
           successCallback = () => {};
         }
 
-        if (obj) {
-          if (obj.size != null) {
+        if (obj.size != null) {
+          onError(
+            new InvalidModificationError(
+              this.filesystem.name,
+              fullPath,
+              `${fullPath} is not a directory`
+            ),
+            errorCallback
+          );
+          return;
+        }
+
+        if (options.create) {
+          if (options.exclusive) {
             onError(
               new InvalidModificationError(
-                this.filesystem.name,
                 fullPath,
-                `${fullPath} is not a directory`
+                `${fullPath} already exists`
               ),
               errorCallback
             );
             return;
           }
-
-          if (options.create) {
-            if (options.exclusive) {
-              onError(
-                new InvalidModificationError(
-                  fullPath,
-                  `${fullPath} already exists`
-                ),
-                errorCallback
-              );
-              return;
-            }
-          }
-          successCallback(this.toDirectoryEntry(obj));
-        } else {
+        }
+        successCallback(this.toDirectoryEntry(obj));
+      })
+      .catch(err => {
+        if (err instanceof NotFoundError) {
           const name = fullPath.split(DIR_SEPARATOR).pop();
           const accessor = this.params.accessor;
           const entry = new S3DirectoryEntry({
@@ -92,10 +100,9 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
           } else {
             successCallback(entry);
           }
+        } else {
+          onError(err, errorCallback);
         }
-      })
-      .catch(err => {
-        onError(err, errorCallback);
       });
   }
 

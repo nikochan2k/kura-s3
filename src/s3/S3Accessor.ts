@@ -1,10 +1,14 @@
+import { AWSError } from "aws-sdk";
 import { DeleteObjectRequest, ListObjectsV2Request } from "aws-sdk/clients/s3";
 import {
   AbstractAccessor,
   DIR_SEPARATOR,
   FileSystem,
   FileSystemObject,
-  normalizePath
+  InvalidModificationError,
+  normalizePath,
+  NotFoundError,
+  NotReadableError
 } from "kura";
 import { FileSystemOptions } from "kura/lib/FileSystemOptions";
 import { S3FileSystem } from "./S3FileSystem";
@@ -31,9 +35,6 @@ export class S3Accessor extends AbstractAccessor {
   async resetObject(fullPath: string, size?: number) {
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
     const obj = await this.doGetObject(path);
-    if (!obj) {
-      return null;
-    }
     await this.putObject(obj);
     return obj;
   }
@@ -48,7 +49,11 @@ export class S3Accessor extends AbstractAccessor {
       Bucket: this.bucket,
       Key: key
     };
-    await this.s3.deleteObject(params).promise();
+    try {
+      await this.s3.deleteObject(params).promise();
+    } catch (err) {
+      throw new InvalidModificationError(this.name, fullPath, err);
+    }
   }
 
   protected async doGetContent(fullPath: string) {
@@ -69,10 +74,10 @@ export class S3Accessor extends AbstractAccessor {
       }
       return blob;
     } catch (err) {
-      if (err.statusCode !== 404) {
-        console.error(err);
+      if ((err as AWSError).statusCode === 404) {
+        throw new NotFoundError(this.name, fullPath, err);
       }
-      return null;
+      throw new NotReadableError(this.name, fullPath, err);
     }
   }
 
@@ -94,10 +99,10 @@ export class S3Accessor extends AbstractAccessor {
         size: data.ContentLength
       };
     } catch (err) {
-      if (err.statusCode !== 404) {
-        console.error(err);
+      if ((err as AWSError).statusCode === 404) {
+        throw new NotFoundError(this.name, fullPath, err);
       }
-      return null;
+      throw new NotReadableError(this.name, fullPath, err);
     }
   }
 
@@ -110,6 +115,7 @@ export class S3Accessor extends AbstractAccessor {
       Prefix: prefix,
       ContinuationToken: null
     };
+
     const objects: FileSystemObject[] = [];
     await this.doGetObjectsFromS3(params, dirPath, path, objects);
     return objects;
@@ -121,33 +127,40 @@ export class S3Accessor extends AbstractAccessor {
     path: string,
     objects: FileSystemObject[]
   ) {
-    const data = await this.s3.listObjectsV2(params).promise();
-    for (const content of data.CommonPrefixes) {
-      const parts = content.Prefix.split(DIR_SEPARATOR);
-      const name = parts[parts.length - 2];
-      const fullPath = normalizePath(dirPath + DIR_SEPARATOR + name);
-      objects.push({
-        name: name,
-        fullPath: fullPath,
-        lastModified: null,
-        size: null
-      });
-    }
-    for (const content of data.Contents) {
-      const parts = content.Key.split(DIR_SEPARATOR);
-      const name = parts[parts.length - 1];
-      const fullPath = normalizePath(dirPath + DIR_SEPARATOR + name);
-      objects.push({
-        name: name,
-        fullPath: fullPath,
-        lastModified: content.LastModified.getTime(),
-        size: content.Size
-      });
-    }
+    try {
+      const data = await this.s3.listObjectsV2(params).promise();
+      for (const content of data.CommonPrefixes) {
+        const parts = content.Prefix.split(DIR_SEPARATOR);
+        const name = parts[parts.length - 2];
+        const fullPath = normalizePath(dirPath + DIR_SEPARATOR + name);
+        objects.push({
+          name: name,
+          fullPath: fullPath,
+          lastModified: null,
+          size: null
+        });
+      }
+      for (const content of data.Contents) {
+        const parts = content.Key.split(DIR_SEPARATOR);
+        const name = parts[parts.length - 1];
+        const fullPath = normalizePath(dirPath + DIR_SEPARATOR + name);
+        objects.push({
+          name: name,
+          fullPath: fullPath,
+          lastModified: content.LastModified.getTime(),
+          size: content.Size
+        });
+      }
 
-    if (data.IsTruncated) {
-      params.ContinuationToken = data.NextContinuationToken;
-      await this.doGetObjectsFromS3(params, dirPath, path, objects);
+      if (data.IsTruncated) {
+        params.ContinuationToken = data.NextContinuationToken;
+        await this.doGetObjectsFromS3(params, dirPath, path, objects);
+      }
+    } catch (err) {
+      if ((err as AWSError).statusCode === 404) {
+        throw new NotFoundError(this.name, dirPath, err);
+      }
+      throw new NotReadableError(this.name, dirPath, err);
     }
   }
 
@@ -171,13 +184,17 @@ export class S3Accessor extends AbstractAccessor {
     }
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
     const key = getKey(path);
-    await this.s3
-      .putObject({
-        Bucket: this.bucket,
-        Key: key,
-        Body: body
-      })
-      .promise();
+    try {
+      await this.s3
+        .putObject({
+          Bucket: this.bucket,
+          Key: key,
+          Body: body
+        })
+        .promise();
+    } catch (err) {
+      throw new InvalidModificationError(this.name, fullPath, err);
+    }
   }
 
   protected async doPutObject(obj: FileSystemObject) {}
