@@ -60,13 +60,12 @@ export class S3Accessor extends AbstractAccessor {
         .promise();
       const content = data.Body.valueOf();
       let blob: Blob;
-      if (content instanceof Buffer) {
-        // Node
-        const buffer = content as Buffer;
-        blob = new Blob([buffer]);
-      } else {
+      if (content instanceof Blob) {
         // Browser
         blob = content as Blob;
+      } else {
+        // Node
+        blob = new Blob([content as any]);
       }
       return blob;
     } catch (err) {
