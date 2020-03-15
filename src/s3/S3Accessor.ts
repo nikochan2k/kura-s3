@@ -45,6 +45,9 @@ export class S3Accessor extends AbstractAccessor {
     try {
       await this.s3.deleteObject(params).promise();
     } catch (err) {
+      if ((err as AWSError).statusCode === 404) {
+        throw new NotFoundError(this.name, fullPath, err);
+      }
       throw new InvalidModificationError(this.name, fullPath, err);
     }
   }
@@ -121,39 +124,39 @@ export class S3Accessor extends AbstractAccessor {
     objects: FileSystemObject[]
   ) {
     try {
-      const data = await this.s3.listObjectsV2(params).promise();
-      for (const content of data.CommonPrefixes) {
-        const parts = content.Prefix.split(DIR_SEPARATOR);
-        const name = parts[parts.length - 2];
-        const fullPath = normalizePath(dirPath + DIR_SEPARATOR + name);
-        objects.push({
-          name: name,
-          fullPath: fullPath,
-          lastModified: null,
-          size: null
-        });
-      }
-      for (const content of data.Contents) {
-        const parts = content.Key.split(DIR_SEPARATOR);
-        const name = parts[parts.length - 1];
-        const fullPath = normalizePath(dirPath + DIR_SEPARATOR + name);
-        objects.push({
-          name: name,
-          fullPath: fullPath,
-          lastModified: content.LastModified.getTime(),
-          size: content.Size
-        });
-      }
-
-      if (data.IsTruncated) {
-        params.ContinuationToken = data.NextContinuationToken;
-        await this.doGetObjectsFromS3(params, dirPath, path, objects);
-      }
+      var data = await this.s3.listObjectsV2(params).promise();
     } catch (err) {
       if ((err as AWSError).statusCode === 404) {
         throw new NotFoundError(this.name, dirPath, err);
       }
       throw new NotReadableError(this.name, dirPath, err);
+    }
+    for (const content of data.CommonPrefixes) {
+      const parts = content.Prefix.split(DIR_SEPARATOR);
+      const name = parts[parts.length - 2];
+      const fullPath = normalizePath(dirPath + DIR_SEPARATOR + name);
+      objects.push({
+        name: name,
+        fullPath: fullPath,
+        lastModified: null,
+        size: null
+      });
+    }
+    for (const content of data.Contents) {
+      const parts = content.Key.split(DIR_SEPARATOR);
+      const name = parts[parts.length - 1];
+      const fullPath = normalizePath(dirPath + DIR_SEPARATOR + name);
+      objects.push({
+        name: name,
+        fullPath: fullPath,
+        lastModified: content.LastModified.getTime(),
+        size: content.Size
+      });
+    }
+
+    if (data.IsTruncated) {
+      params.ContinuationToken = data.NextContinuationToken;
+      await this.doGetObjectsFromS3(params, dirPath, path, objects);
     }
   }
 
