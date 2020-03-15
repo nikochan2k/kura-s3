@@ -1,6 +1,6 @@
 import { S3 } from "aws-sdk";
 import { AbstractAccessor } from "kura";
-import { testAll } from "../../node_modules/kura/lib/__tests__/filesystem";
+import { testAll } from "kura/lib/__tests__/filesystem";
 import { S3LocalFileSystemAsync } from "../s3/S3LocalFileSystemAsync";
 
 AbstractAccessor.PUT_INDEX_THROTTLE = 0;
