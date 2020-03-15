@@ -32,13 +32,6 @@ export class S3Accessor extends AbstractAccessor {
     this.name = bucket + rootDir;
   }
 
-  async resetObject(fullPath: string, size?: number) {
-    const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
-    const obj = await this.doGetObject(path);
-    await this.putObject(obj);
-    return obj;
-  }
-
   protected async doDelete(fullPath: string, isFile: boolean) {
     if (!isFile) {
       return;
