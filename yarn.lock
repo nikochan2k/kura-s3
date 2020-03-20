@@ -2215,12 +2215,13 @@ kleur@^3.0.3:
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
-kura@^0.1.111:
-  version "0.1.111"
-  resolved "https://registry.yarnpkg.com/kura/-/kura-0.1.111.tgz#20fe636f3b92e4bca916189272d9aeb794228f3f"
-  integrity sha512-N3BNCwVheDo9MVax9ieayvM/vKLLPTXwdITbb3sbC75Rme86Us097vADtLVRJSg147Q7H/2yetmF9VUjngDzKw==
+kura@^0.1.113:
+  version "0.1.113"
+  resolved "https://registry.yarnpkg.com/kura/-/kura-0.1.113.tgz#ffcafac748cf85fbdd498ee0aa07a398a0da873e"
+  integrity sha512-w06QwgWvIMkAmQSs64B6iG9HVhYfmX/1yO8DmInOVhRINpDGpey9JgvYFxf4MGwgSi4p2tsgPMJDHh30S1kXXQ==
   dependencies:
     base-64 "^0.1.0"
+    text-encoding-utf-8 "^1.0.2"
 
 leven@^3.1.0:
   version "3.1.0"
@@ -3304,6 +3305,11 @@ test-exclude@^6.0.0:
     "@istanbuljs/schema" "^0.1.2"
     glob "^7.1.4"
     minimatch "^3.0.4"
+
+text-encoding-utf-8@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/text-encoding-utf-8/-/text-encoding-utf-8-1.0.2.tgz#585b62197b0ae437e3c7b5d0af27ac1021e10d13"
+  integrity sha512-8bw4MY9WjdsD2aMtO0OzOCY3pXGYNx2d2FfHRVUKkiCPDWjKuOlhLVASS+pD7VkLTVjW268LYJHwsnPFlBpbAg==
 
 throat@^5.0.0:
   version "5.0.0"
