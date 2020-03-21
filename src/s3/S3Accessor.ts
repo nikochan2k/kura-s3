@@ -32,7 +32,7 @@ export class S3Accessor extends AbstractAccessor {
     this.name = bucket + rootDir;
   }
 
-  protected async doDelete(fullPath: string, isFile: boolean) {
+  async doDelete(fullPath: string, isFile: boolean) {
     if (!isFile) {
       return;
     }
@@ -52,7 +52,7 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  protected async doGetContent(fullPath: string) {
+  async doGetContent(fullPath: string) {
     try {
       const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
       const key = getKey(path);
@@ -77,7 +77,7 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  protected async doGetObject(fullPath: string): Promise<FileSystemObject> {
+  async doGetObject(fullPath: string): Promise<FileSystemObject> {
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
     const key = getKey(path);
     try {
@@ -102,7 +102,7 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  protected async doGetObjects(dirPath: string) {
+  async doGetObjects(dirPath: string) {
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + dirPath);
     const prefix = getPrefix(path);
     const params: ListObjectsV2Request = {
@@ -160,7 +160,7 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  protected async doPutContent(fullPath: string, content: Blob) {
+  async doPutContent(fullPath: string, content: Blob) {
     let body: any;
     if (typeof process === "object") {
       // Node
@@ -193,5 +193,5 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  protected async doPutObject(obj: FileSystemObject) {}
+  async doPutObject(obj: FileSystemObject) {}
 }

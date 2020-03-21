@@ -398,10 +398,10 @@
     jest-diff "^25.1.0"
     pretty-format "^25.1.0"
 
-"@types/node@^13.9.1":
-  version "13.9.1"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-13.9.1.tgz#96f606f8cd67fb018847d9b61e93997dabdefc72"
-  integrity sha512-E6M6N0blf/jiZx8Q3nb0vNaswQeEyn0XlupO+xN6DtJ6r6IT4nXrTry7zhIfYvFCl3/8Cu6WIysmUBKiqV0bqQ==
+"@types/node@^13.9.2":
+  version "13.9.2"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-13.9.2.tgz#ace1880c03594cc3e80206d96847157d8e7fa349"
+  integrity sha512-bnoqK579sAYrQbp73wwglccjJ4sfRdKU7WNEZ5FW4K2U6Kc0/eZ5kvXG0JKsEKFB50zrFmfFt52/cvBbZa7eXg==
 
 "@types/stack-utils@^1.0.1":
   version "1.0.1"
@@ -570,10 +570,10 @@ atob@^2.1.2:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
-aws-sdk@^2.619.0:
-  version "2.639.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.639.0.tgz#ae887a179939750de240ddeb680668300256900f"
-  integrity sha512-cbH69oV0ObZ4tapbjDqu0j3I779uscQNhRaewjIJY5O5At4RULtd7us24n72FtT4HIwM9cwORzVxA9rK6DHKOA==
+aws-sdk@^2.643.0:
+  version "2.643.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.643.0.tgz#0b4cc49165a25c42ab0503580806d367d32ffb88"
+  integrity sha512-4r7VGQFqshrhXnOCVQdlatAWiK/8kmmtAtY9gbITPNpY5Is+SfIy6k/1BgrnL5H/2sYd27H+Xp8itXZoCnQeTw==
   dependencies:
     buffer "4.9.1"
     events "1.1.1"
@@ -2215,13 +2215,12 @@ kleur@^3.0.3:
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
-kura@^0.1.115:
-  version "0.1.115"
-  resolved "https://registry.yarnpkg.com/kura/-/kura-0.1.115.tgz#e38b5ed78cb3fc1affb4fe009c3f0a296483fa49"
-  integrity sha512-66XRSI/VMtRX9BDglRtVa5S9KUQJx3uhBZEk2kp1UJjySTOa/HMHG393DkF1TdQAMPboM71m1F0l0I8MbwKXgw==
+kura@^0.1.124:
+  version "0.1.124"
+  resolved "https://registry.yarnpkg.com/kura/-/kura-0.1.124.tgz#70f4ee75b5105a67cf167acaf8a3db75dde3f3ae"
+  integrity sha512-9IzqbuViJciE4WicBv+xtDXHgKFIyOODhqnZnmBKqbu1MbdhWyUtbRGybBKHjlvM1kIH8Jt4eLxNah5qAM86kA==
   dependencies:
     base-64 "^0.1.0"
-    text-encoding-utf-8 "^1.0.2"
 
 leven@^3.1.0:
   version "3.1.0"
@@ -3305,11 +3304,6 @@ test-exclude@^6.0.0:
     "@istanbuljs/schema" "^0.1.2"
     glob "^7.1.4"
     minimatch "^3.0.4"
-
-text-encoding-utf-8@^1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/text-encoding-utf-8/-/text-encoding-utf-8-1.0.2.tgz#585b62197b0ae437e3c7b5d0af27ac1021e10d13"
-  integrity sha512-8bw4MY9WjdsD2aMtO0OzOCY3pXGYNx2d2FfHRVUKkiCPDWjKuOlhLVASS+pD7VkLTVjW268LYJHwsnPFlBpbAg==
 
 throat@^5.0.0:
   version "5.0.0"
