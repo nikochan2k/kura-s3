@@ -2,6 +2,8 @@ import { AWSError } from "aws-sdk";
 import { DeleteObjectRequest, ListObjectsV2Request } from "aws-sdk/clients/s3";
 import {
   AbstractAccessor,
+  blobToArrayBuffer,
+  blobToBase64,
   DIR_SEPARATOR,
   FileSystem,
   FileSystemObject,
@@ -9,11 +11,10 @@ import {
   normalizePath,
   NotFoundError,
   NotReadableError,
-  blobToArrayBuffer,
-  blobToBase64
+  urlToBlob
 } from "kura";
-import { FileSystemOptions } from "kura/lib/FileSystemOptions";
 import { S3FileSystem } from "./S3FileSystem";
+import { S3FileSystemOptions } from "./S3FileSystemOption";
 import { getKey, getPrefix } from "./S3Util";
 import S3 = require("aws-sdk/clients/s3");
 
@@ -26,9 +27,9 @@ export class S3Accessor extends AbstractAccessor {
     config: S3.ClientConfiguration,
     private bucket: string,
     private rootDir: string,
-    options?: FileSystemOptions
+    private s3Options?: S3FileSystemOptions
   ) {
-    super(options);
+    super(s3Options);
     this.s3 = new S3(config);
     this.filesystem = new S3FileSystem(this);
     this.name = bucket + rootDir;
@@ -55,27 +56,10 @@ export class S3Accessor extends AbstractAccessor {
   }
 
   async doGetContent(fullPath: string) {
-    try {
-      const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
-      const key = getKey(path);
-      const data = await this.s3
-        .getObject({ Bucket: this.bucket, Key: key })
-        .promise();
-      const content = data.Body.valueOf();
-      let blob: Blob;
-      if (content instanceof Blob) {
-        // Browser
-        blob = content as Blob;
-      } else {
-        // Node
-        blob = new Blob([content as any]);
-      }
-      return blob;
-    } catch (err) {
-      if ((err as AWSError).statusCode === 404) {
-        throw new NotFoundError(this.name, fullPath, err);
-      }
-      throw new NotReadableError(this.name, fullPath, err);
+    if (this.s3Options.methodOfDoGetContent === "getObject") {
+      return await this.doGetContentUsingGetObject(fullPath);
+    } else {
+      return await this.doGetContentUsingXHR(fullPath);
     }
   }
 
@@ -120,12 +104,70 @@ export class S3Accessor extends AbstractAccessor {
   }
 
   async doPutContent(fullPath: string, content: Blob) {
-    await this.doPutContentUsingUpload(fullPath, content);
+    const method = this.s3Options.methodOfDoPutContent;
+    if (method === "uploadPart") {
+      await this.doPutContentUsingUploadPart(fullPath, content);
+    } else if (method === "putObject") {
+      await this.doPutContentUsingPutObject(fullPath, content);
+    } else {
+      await this.doPutContentUsingUpload(fullPath, content);
+    }
   }
 
   async doPutObject(obj: FileSystemObject) {}
 
-  protected async doGetObjectsFromS3(
+  private async doGetContentUsingGetObject(fullPath: string) {
+    try {
+      const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
+      const key = getKey(path);
+      const data = await this.s3
+        .getObject({ Bucket: this.bucket, Key: key })
+        .promise();
+      const content = data.Body.valueOf();
+      let blob: Blob;
+      if (content instanceof Blob) {
+        // Browser
+        blob = content as Blob;
+      } else {
+        // Node
+        blob = new Blob([content as any]);
+      }
+      return blob;
+    } catch (err) {
+      if ((err as AWSError).statusCode === 404) {
+        throw new NotFoundError(this.name, fullPath, err);
+      }
+      throw new NotReadableError(this.name, fullPath, err);
+    }
+  }
+
+  private async doGetContentUsingXHR(fullPath: string) {
+    try {
+      const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
+      const key = getKey(path);
+
+      // check existance
+      await this.s3
+        .headObject({
+          Bucket: this.bucket,
+          Key: key
+        })
+        .promise();
+
+      const url = await this.s3.getSignedUrlPromise("getObject", {
+        Bucket: this.bucket,
+        Key: key
+      });
+      return urlToBlob(url);
+    } catch (err) {
+      if ((err as AWSError).statusCode === 404) {
+        throw new NotFoundError(this.name, fullPath, err);
+      }
+      throw new NotReadableError(this.name, fullPath, err);
+    }
+  }
+
+  private async doGetObjectsFromS3(
     params: ListObjectsV2Request,
     dirPath: string,
     path: string,
