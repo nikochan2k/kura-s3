@@ -8,7 +8,9 @@ import {
   InvalidModificationError,
   normalizePath,
   NotFoundError,
-  NotReadableError
+  NotReadableError,
+  blobToArrayBuffer,
+  blobToBase64
 } from "kura";
 import { FileSystemOptions } from "kura/lib/FileSystemOptions";
 import { S3FileSystem } from "./S3FileSystem";
@@ -117,6 +119,12 @@ export class S3Accessor extends AbstractAccessor {
     return objects;
   }
 
+  async doPutContent(fullPath: string, content: Blob) {
+    await this.doPutContentUsingUpload(fullPath, content);
+  }
+
+  async doPutObject(obj: FileSystemObject) {}
+
   protected async doGetObjectsFromS3(
     params: ListObjectsV2Request,
     dirPath: string,
@@ -160,26 +168,24 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  async doPutContent(fullPath: string, content: Blob) {
+  private async doPutContentUsingPutObject(fullPath: string, content: Blob) {
     let body: any;
     if (typeof process === "object") {
       // Node
-      const sendData = await new Promise<Uint8Array>(resolve => {
-        const fileReader = new FileReader();
-        fileReader.onloadend = event => {
-          const data = event.target.result as ArrayBuffer;
-          const byte = new Uint8Array(data);
-          resolve(byte);
-        };
-        fileReader.readAsArrayBuffer(content);
-      });
-      body = Buffer.from(sendData);
+      const buffer = await blobToArrayBuffer(content);
+      const view = new Uint8Array(buffer);
+      body = Buffer.from(view);
     } else {
       // Browser
       body = content;
     }
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
     const key = getKey(path);
+    const url = this.s3.getSignedUrl("putObject", {
+      Bucket: this.bucket,
+      Key: key
+    });
+    console.log(url);
     try {
       await this.s3
         .putObject({
@@ -193,5 +199,69 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  async doPutObject(obj: FileSystemObject) {}
+  private async doPutContentUsingUpload(fullPath: string, content: Blob) {
+    const str = await blobToBase64(content);
+    const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
+    const key = getKey(path);
+    await this.s3
+      .upload({
+        Bucket: this.bucket,
+        Key: key,
+        Body: str
+      })
+      .promise();
+  }
+
+  private async doPutContentUsingUploadPart(fullPath: string, content: Blob) {
+    const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
+    const key = getKey(path);
+
+    const allSize = content.size;
+    const partSize = 1024 * 1024; // 1MB chunk
+    const multipartMap: S3.CompletedMultipartUpload = {
+      Parts: []
+    };
+
+    const createReq: S3.CreateMultipartUploadRequest = {
+      Bucket: this.bucket,
+      Key: key
+    };
+    const multiPartUpload = await this.s3
+      .createMultipartUpload(createReq)
+      .promise();
+    const uploadId = multiPartUpload.UploadId;
+
+    let partNum = 0;
+    const { ContentType, ...otherParams } = createReq;
+    for (let rangeStart = 0; rangeStart < allSize; rangeStart += partSize) {
+      partNum++;
+      const end = Math.min(rangeStart + partSize, allSize);
+      const sliced = content.slice(rangeStart, end);
+      const chunk = blobToArrayBuffer(sliced);
+
+      const progress = end / content.size;
+      console.log(`${progress * 100}%`);
+
+      const partParams: S3.UploadPartRequest = {
+        Body: chunk,
+        PartNumber: partNum,
+        UploadId: uploadId,
+        ...otherParams
+      };
+      const uploadPart = await this.s3.uploadPart(partParams).promise();
+
+      multipartMap.Parts[partNum - 1] = {
+        ETag: uploadPart.ETag,
+        PartNumber: partNum
+      };
+    }
+
+    const completeReq: S3.CompleteMultipartUploadRequest = {
+      ...otherParams,
+      MultipartUpload: multipartMap,
+      UploadId: uploadId
+    };
+
+    await this.s3.completeMultipartUpload(completeReq).promise();
+  }
 }
