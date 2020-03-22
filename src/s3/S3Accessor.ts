@@ -11,7 +11,8 @@ import {
   normalizePath,
   NotFoundError,
   NotReadableError,
-  urlToBlob
+  xhrGet,
+  xhrPut
 } from "kura";
 import { S3FileSystem } from "./S3FileSystem";
 import { S3FileSystemOptions } from "./S3FileSystemOption";
@@ -105,7 +106,10 @@ export class S3Accessor extends AbstractAccessor {
 
   async doPutContent(fullPath: string, content: Blob) {
     const method = this.s3Options.methodOfDoPutContent;
-    if (method === "uploadPart") {
+
+    if (method === "xhr") {
+      await this.doPutContentUsingXHR(fullPath, content);
+    } else if (method === "uploadPart") {
       await this.doPutContentUsingUploadPart(fullPath, content);
     } else if (method === "putObject") {
       await this.doPutContentUsingPutObject(fullPath, content);
@@ -158,7 +162,7 @@ export class S3Accessor extends AbstractAccessor {
         Bucket: this.bucket,
         Key: key
       });
-      return urlToBlob(url);
+      return await xhrGet(url, this.name, fullPath);
     } catch (err) {
       if ((err as AWSError).statusCode === 404) {
         throw new NotFoundError(this.name, fullPath, err);
@@ -305,5 +309,20 @@ export class S3Accessor extends AbstractAccessor {
     };
 
     await this.s3.completeMultipartUpload(completeReq).promise();
+  }
+
+  private async doPutContentUsingXHR(fullPath: string, content: Blob) {
+    try {
+      const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
+      const key = getKey(path);
+
+      const url = await this.s3.getSignedUrlPromise("putObject", {
+        Bucket: this.bucket,
+        Key: key
+      });
+      await xhrPut(url, content, this.name, fullPath);
+    } catch (err) {
+      throw new InvalidModificationError(this.name, fullPath, err);
+    }
   }
 }
