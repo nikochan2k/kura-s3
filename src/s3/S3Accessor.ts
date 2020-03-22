@@ -57,10 +57,10 @@ export class S3Accessor extends AbstractAccessor {
   }
 
   async doGetContent(fullPath: string) {
-    if (this.s3Options.methodOfDoGetContent === "getObject") {
-      return await this.doGetContentUsingGetObject(fullPath);
-    } else {
+    if (this.s3Options.methodOfDoGetContent === "xhr") {
       return await this.doGetContentUsingXHR(fullPath);
+    } else {
+      return await this.doGetContentUsingGetObject(fullPath);
     }
   }
 
