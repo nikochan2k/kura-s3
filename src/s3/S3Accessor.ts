@@ -3,7 +3,6 @@ import { DeleteObjectRequest, ListObjectsV2Request } from "aws-sdk/clients/s3";
 import {
   AbstractAccessor,
   blobToArrayBuffer,
-  blobToBase64,
   DIR_SEPARATOR,
   FileSystem,
   FileSystemObject,
@@ -109,12 +108,12 @@ export class S3Accessor extends AbstractAccessor {
 
     if (method === "xhr") {
       await this.doPutContentUsingXHR(fullPath, content);
+    } else if (method === "upload") {
+      await this.doPutContentUsingUpload(fullPath, content);
     } else if (method === "uploadPart") {
       await this.doPutContentUsingUploadPart(fullPath, content);
-    } else if (method === "putObject") {
-      await this.doPutContentUsingPutObject(fullPath, content);
     } else {
-      await this.doPutContentUsingUpload(fullPath, content);
+      await this.doPutContentUsingPutObject(fullPath, content);
     }
   }
 
@@ -215,23 +214,13 @@ export class S3Accessor extends AbstractAccessor {
   }
 
   private async doPutContentUsingPutObject(fullPath: string, content: Blob) {
-    let body: any;
-    if (typeof process === "object") {
-      // Node
-      const buffer = await blobToArrayBuffer(content);
-      const view = new Uint8Array(buffer);
-      body = Buffer.from(view);
-    } else {
-      // Browser
-      body = content;
-    }
+    const body = await this.getBody(content);
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
     const key = getKey(path);
     const url = this.s3.getSignedUrl("putObject", {
       Bucket: this.bucket,
       Key: key
     });
-    console.log(url);
     try {
       await this.s3
         .putObject({
@@ -246,14 +235,14 @@ export class S3Accessor extends AbstractAccessor {
   }
 
   private async doPutContentUsingUpload(fullPath: string, content: Blob) {
-    const str = await blobToBase64(content);
+    const body = await this.getBody(content);
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
     const key = getKey(path);
     await this.s3
       .upload({
         Bucket: this.bucket,
         Key: key,
-        Body: str
+        Body: body
       })
       .promise();
   }
@@ -284,9 +273,6 @@ export class S3Accessor extends AbstractAccessor {
       const end = Math.min(rangeStart + partSize, allSize);
       const sliced = content.slice(rangeStart, end);
       const chunk = blobToArrayBuffer(sliced);
-
-      const progress = end / content.size;
-      console.log(`${progress * 100}%`);
 
       const partParams: S3.UploadPartRequest = {
         Body: chunk,
@@ -323,6 +309,18 @@ export class S3Accessor extends AbstractAccessor {
       await xhrPut(url, content, this.name, fullPath);
     } catch (err) {
       throw new InvalidModificationError(this.name, fullPath, err);
+    }
+  }
+
+  private async getBody(content: Blob) {
+    if (typeof process === "object") {
+      // Node
+      const buffer = await blobToArrayBuffer(content);
+      const view = new Uint8Array(buffer);
+      return Buffer.from(view);
+    } else {
+      // Web
+      return content;
     }
   }
 }
