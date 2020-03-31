@@ -10,8 +10,9 @@ import {
   normalizePath,
   NotFoundError,
   NotReadableError,
-  xhrGet,
-  xhrPut
+  xhrGetBlob,
+  xhrPut,
+  xhrGetText
 } from "kura";
 import { S3FileSystem } from "./S3FileSystem";
 import { S3FileSystemOptions } from "./S3FileSystemOption";
@@ -119,6 +120,32 @@ export class S3Accessor extends AbstractAccessor {
 
   async doPutObject(obj: FileSystemObject) {}
 
+  protected async doGetText(fullPath: string) {
+    try {
+      const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
+      const key = getKey(path);
+
+      // check existance
+      await this.s3
+        .headObject({
+          Bucket: this.bucket,
+          Key: key
+        })
+        .promise();
+
+      const url = await this.s3.getSignedUrlPromise("getObject", {
+        Bucket: this.bucket,
+        Key: key
+      });
+      return await xhrGetText(url, this.name, fullPath);
+    } catch (err) {
+      if ((err as AWSError).statusCode === 404) {
+        throw new NotFoundError(this.name, fullPath, err);
+      }
+      throw new NotReadableError(this.name, fullPath, err);
+    }
+  }
+
   private async doGetContentUsingGetObject(fullPath: string) {
     try {
       const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
@@ -161,7 +188,7 @@ export class S3Accessor extends AbstractAccessor {
         Bucket: this.bucket,
         Key: key
       });
-      return await xhrGet(url, this.name, fullPath);
+      return await xhrGetBlob(url, this.name, fullPath);
     } catch (err) {
       if ((err as AWSError).statusCode === 404) {
         throw new NotFoundError(this.name, fullPath, err);
