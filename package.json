@@ -51,19 +51,19 @@
     "preset": "ts-jest"
   },
   "devDependencies": {
-    "@types/jest": "^25.1.4",
-    "@types/node": "^13.9.2",
+    "@types/jest": "^25.2.1",
+    "@types/node": "^13.11.0",
     "aws-sdk": "^2.643.0",
-    "jest": "^25.1.0",
-    "kura": "^0.1.139",
+    "jest": "^25.2.7",
+    "kura": "^0.1.143",
     "npm-run-all": "^4.1.5",
     "rimraf": "^3.0.2",
-    "ts-jest": "^25.2.1",
+    "ts-jest": "^25.3.1",
     "typescript": "^3.8.3"
   },
   "dependencies": {},
   "peerDependencies": {
-    "aws-sdk": "^2.639.0",
-    "kura": "^0.1.139"
+    "aws-sdk": "^2.653.0",
+    "kura": "^0.1.143"
   }
 }
