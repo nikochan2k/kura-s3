@@ -4,11 +4,11 @@ import { testAll } from "kura/lib/__tests__/filesystem";
 import { S3LocalFileSystemAsync } from "../s3/S3LocalFileSystemAsync";
 
 const config: S3.ClientConfiguration = {
-  accessKeyId: "KFS0LZVKZ8G456A502L3",
-  secretAccessKey: "uVwBONMdTwJI1+C8jUhrypvshHz3OY8Ooar3amdC",
+  accessKeyId: "minioadmin",
+  secretAccessKey: "minioadmin",
   endpoint: "http://127.0.0.1:9000",
   s3ForcePathStyle: true, // needed with minio?
-  signatureVersion: "v4"
+  signatureVersion: "v4",
 };
 const factory = new S3LocalFileSystemAsync(
   config,

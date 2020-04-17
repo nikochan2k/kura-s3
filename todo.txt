@@ -1,1 +1,7 @@
 ・key.split(DIR_SEPARATOR).pop()は正規表現に直した方が速いかも？
+
+SET MINIO_ACCESS_KEY=minioadmin
+SET MINIO_SECRET_KEY=minioadmin
+
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin

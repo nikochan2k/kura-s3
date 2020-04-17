@@ -245,7 +245,6 @@ export class S3Accessor extends AbstractAccessor {
     content: Blob | ArrayBuffer | string
   ) {
     const body = await this.getBody(content);
-    console.log(body);
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
     const key = getKey(path);
     try {
