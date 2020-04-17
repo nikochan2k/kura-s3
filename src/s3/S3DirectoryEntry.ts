@@ -2,7 +2,6 @@ import {
   AbstractDirectoryEntry,
   DirectoryEntry,
   DirectoryEntryCallback,
-  DirectoryReader,
   DIR_SEPARATOR,
   ErrorCallback,
   FileEntry,
@@ -12,19 +11,14 @@ import {
   InvalidModificationError,
   NotFoundError,
   onError,
-  resolveToFullPath
+  resolveToFullPath,
 } from "kura";
 import { S3Accessor } from "./S3Accessor";
-import { S3DirectoryReader } from "./S3DirectoryReader";
 import { S3FileEntry } from "./S3FileEntry";
 
 export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
   constructor(params: FileSystemParams<S3Accessor>) {
     super(params);
-  }
-
-  createReader(): DirectoryReader {
-    return new S3DirectoryReader(this);
   }
 
   getDirectory(
@@ -37,7 +31,7 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
 
     this.params.accessor
       .getObject(fullPath)
-      .then(async obj => {
+      .then(async (obj) => {
         if (fullPath === "/") {
           successCallback(this.filesystem.root);
           return;
@@ -76,25 +70,25 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
         }
         successCallback(this.toDirectoryEntry(obj));
       })
-      .catch(err => {
+      .catch((err) => {
         if (err instanceof NotFoundError) {
           const name = fullPath.split(DIR_SEPARATOR).pop();
           const accessor = this.params.accessor;
           const entry = new S3DirectoryEntry({
             accessor: accessor,
             name: name,
-            fullPath: fullPath
+            fullPath: fullPath,
           });
           if (accessor.options.useIndex) {
             accessor
               .updateIndex({
                 name: name,
-                fullPath: fullPath
+                fullPath: fullPath,
               })
               .then(() => {
                 successCallback(entry);
               })
-              .catch(err => {
+              .catch((err) => {
                 onError(err, errorCallback);
               });
           } else {
@@ -106,17 +100,29 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
       });
   }
 
+  protected createEntry(obj: FileSystemObject) {
+    return obj.size != null
+      ? new S3FileEntry({
+          accessor: this.params.accessor,
+          ...obj,
+        })
+      : new S3DirectoryEntry({
+          accessor: this.params.accessor,
+          ...obj,
+        });
+  }
+
   protected toDirectoryEntry(obj: FileSystemObject): DirectoryEntry {
     return new S3DirectoryEntry({
       accessor: this.params.accessor,
-      ...obj
+      ...obj,
     });
   }
 
   protected toFileEntry(obj: FileSystemObject): FileEntry {
     return new S3FileEntry({
       accessor: this.params.accessor,
-      ...obj
+      ...obj,
     });
   }
 }
