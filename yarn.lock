@@ -461,10 +461,10 @@
     jest-diff "^25.2.1"
     pretty-format "^25.2.1"
 
-"@types/node@^13.11.1":
-  version "13.11.1"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-13.11.1.tgz#49a2a83df9d26daacead30d0ccc8762b128d53c7"
-  integrity sha512-eWQGP3qtxwL8FGneRrC5DwrJLGN4/dH1clNTuLfN81HCrxVtxRjygDTUoZJ5ASlDEeo0ppYFQjQIlXhtXpOn6g==
+"@types/node@^13.13.0":
+  version "13.13.0"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-13.13.0.tgz#30d2d09f623fe32cde9cb582c7a6eda2788ce4a8"
+  integrity sha512-WE4IOAC6r/yBZss1oQGM5zs2D7RuKR6Q+w+X2SouPofnWn+LbCqClRyhO3ZE7Ix8nmFgo/oVuuE01cJT2XB13A==
 
 "@types/prettier@^1.19.0":
   version "1.19.1"
@@ -1328,6 +1328,11 @@ fast-levenshtein@~2.0.6:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha1-PYpcZog6FqMMqGQ+hR8Zuqd5eRc=
+
+fast-text-encoding@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/fast-text-encoding/-/fast-text-encoding-1.0.1.tgz#4a428566f74fc55ebdd447555b1eb4d9cf514455"
+  integrity sha512-x4FEgaz3zNRtJfLFqJmHWxkMDDvXVtaznj2V9jiP8ACUJrUgist4bP9FmDL2Vew2Y9mEQI/tG4GqabaitYp9CQ==
 
 fb-watchman@^2.0.0:
   version "2.0.1"
@@ -2317,12 +2322,13 @@ kleur@^3.0.3:
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
-kura@^0.2.10:
-  version "0.2.10"
-  resolved "https://registry.yarnpkg.com/kura/-/kura-0.2.10.tgz#dd528817e99dd1367ef5f36cf1c336fa0e7f4d4d"
-  integrity sha512-Th7E2cgjHyT/uSjaX+yLjLJ4w51nzrFkLv1UyznfNodgUJnb/Yv0P90LqDsWyYB0nAEH7iZkTG5YazaCHS5g0g==
+kura@^0.2.15:
+  version "0.2.15"
+  resolved "https://registry.yarnpkg.com/kura/-/kura-0.2.15.tgz#a0e0880acaee523fa428426adba44da92e3e58fb"
+  integrity sha512-b7JCvPpwCpMeGkretYNDCoAA5HMmF0HGwdkgDaoYc+33hfHWTggqNpnZL6a/38ani6qwFTKf79jS7jyJO9yepw==
   dependencies:
     base-64 "^0.1.0"
+    fast-text-encoding "^1.0.1"
 
 leven@^3.1.0:
   version "3.1.0"

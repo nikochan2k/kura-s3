@@ -104,52 +104,24 @@ export class S3Accessor extends AbstractAccessor {
     return objects;
   }
 
-  async doGetText(fullPath: string) {
-    if (this.s3Options.methodOfDoGetContent === "xhr") {
-      return await this.doGetContentUsingXHR(fullPath, "text");
-    } else {
-      return await this.doGetContentUsingGetObject(fullPath);
-    }
-  }
-
-  doPutArrayBuffer(fullPath: string, buffer: ArrayBuffer): Promise<void> {
-    return this.doPutContent(fullPath, buffer);
-  }
-
-  doPutBase64(fullPath: string, base64: string): Promise<void> {
-    const buffer = base64ToArrayBuffer(base64);
-    return this.doPutContent(fullPath, buffer);
-  }
-
-  doPutBlob(fullPath: string, blob: Blob): Promise<void> {
-    return this.doPutContent(fullPath, blob);
-  }
-
-  async doPutContent(fullPath: string, content: Blob | ArrayBuffer | string) {
-    const method = this.s3Options.methodOfDoPutContent;
-
-    if (method === "xhr") {
-      await this.doPutContentUsingXHR(fullPath, content);
-    } else if (method === "upload") {
-      await this.doPutContentUsingUpload(fullPath, content);
-    } else if (method === "uploadPart") {
-      if (typeof content === "string") {
-        const blob = new Blob([content]);
-        await this.doPutContentUsingUploadPart(fullPath, blob);
-      } else {
-        await this.doPutContentUsingUploadPart(fullPath, content);
-      }
-    } else {
-      await this.doPutContentUsingPutObject(fullPath, content);
-    }
-  }
-
   async doPutObject(obj: FileSystemObject) {
     // NOOP
   }
 
-  doPutText(fullPath: string, text: string): Promise<void> {
-    return this.doPutContent(fullPath, text);
+  protected doPutArrayBuffer(
+    fullPath: string,
+    buffer: ArrayBuffer
+  ): Promise<void> {
+    return this.doPutContentToS3(fullPath, buffer);
+  }
+
+  protected doPutBase64(fullPath: string, base64: string): Promise<void> {
+    const buffer = base64ToArrayBuffer(base64);
+    return this.doPutContentToS3(fullPath, buffer);
+  }
+
+  protected doPutBlob(fullPath: string, blob: Blob): Promise<void> {
+    return this.doPutContentToS3(fullPath, blob);
   }
 
   private async doGetContentUsingGetObject(fullPath: string) {
@@ -237,6 +209,28 @@ export class S3Accessor extends AbstractAccessor {
     if (data.IsTruncated) {
       params.ContinuationToken = data.NextContinuationToken;
       await this.doGetObjectsFromS3(params, dirPath, path, objects);
+    }
+  }
+
+  private async doPutContentToS3(
+    fullPath: string,
+    content: Blob | ArrayBuffer | string
+  ) {
+    const method = this.s3Options.methodOfDoPutContent;
+
+    if (method === "xhr") {
+      await this.doPutContentUsingXHR(fullPath, content);
+    } else if (method === "upload") {
+      await this.doPutContentUsingUpload(fullPath, content);
+    } else if (method === "uploadPart") {
+      if (typeof content === "string") {
+        const blob = new Blob([content]);
+        await this.doPutContentUsingUploadPart(fullPath, blob);
+      } else {
+        await this.doPutContentUsingUploadPart(fullPath, content);
+      }
+    } else {
+      await this.doPutContentUsingPutObject(fullPath, content);
     }
   }
 
