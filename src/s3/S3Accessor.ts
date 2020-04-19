@@ -13,6 +13,7 @@ import {
   toBlob,
   xhrGet,
   xhrPut,
+  textToArrayBuffer,
 } from "kura";
 import { S3FileSystem } from "./S3FileSystem";
 import { S3FileSystemOptions } from "./S3FileSystemOption";
@@ -56,7 +57,9 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  async doGetContent(fullPath: string) {
+  async doGetContent(
+    fullPath: string
+  ): Promise<Blob | Uint8Array | ArrayBuffer | string> {
     if (this.s3Options.methodOfDoGetContent === "xhr") {
       return await this.doGetContentUsingXHR(fullPath, "arraybuffer");
     } else {
@@ -215,7 +218,7 @@ export class S3Accessor extends AbstractAccessor {
 
   private async doPutContentToS3(
     fullPath: string,
-    content: Blob | ArrayBuffer | string
+    content: Blob | ArrayBuffer
   ) {
     const method = this.s3Options.methodOfDoPutContent;
 
@@ -237,7 +240,7 @@ export class S3Accessor extends AbstractAccessor {
 
   private async doPutContentUsingPutObject(
     fullPath: string,
-    content: Blob | ArrayBuffer | string
+    content: Blob | ArrayBuffer
   ) {
     const body = await this.toBody(content);
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
@@ -257,7 +260,7 @@ export class S3Accessor extends AbstractAccessor {
 
   private async doPutContentUsingUpload(
     fullPath: string,
-    content: Blob | ArrayBuffer | string
+    content: Blob | ArrayBuffer
   ) {
     const body = await this.toBody(content);
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
@@ -278,9 +281,9 @@ export class S3Accessor extends AbstractAccessor {
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
     const key = getKey(path);
 
-    const body = await this.toBody(content);
-    const buffer = body as Uint8Array;
-    const allSize = buffer.byteLength;
+    const buffer = await toArrayBuffer(content); // TODO
+    const view = new Uint8Array(buffer);
+    const allSize = view.byteLength;
     const partSize = 1024 * 1024; // 1MB chunk
     const multipartMap: S3.CompletedMultipartUpload = {
       Parts: [],
@@ -300,7 +303,7 @@ export class S3Accessor extends AbstractAccessor {
     for (let rangeStart = 0; rangeStart < allSize; rangeStart += partSize) {
       partNum++;
       const end = Math.min(rangeStart + partSize, allSize);
-      const chunk = buffer.slice(rangeStart, end);
+      const chunk = view.slice(rangeStart, end);
       const partParams: S3.UploadPartRequest = {
         Body: chunk,
         PartNumber: partNum,
@@ -326,7 +329,7 @@ export class S3Accessor extends AbstractAccessor {
 
   private async doPutContentUsingXHR(
     fullPath: string,
-    content: Blob | ArrayBuffer | string
+    content: Blob | ArrayBuffer
   ) {
     try {
       const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
@@ -343,27 +346,21 @@ export class S3Accessor extends AbstractAccessor {
   }
 
   private async fromBody(body: any) {
-    // Buffer, Typed Array, Blob, String, ReadableStream
-    if (
-      body instanceof Blob ||
-      body instanceof ArrayBuffer ||
-      typeof body === "string"
-    ) {
-      return body;
-    }
-
+    let content: Blob | ArrayBuffer;
     if (typeof process === "object" && body instanceof Buffer) {
-      return new Uint8Array(body).buffer;
+      const view = new Uint8Array(body).buffer;
+      content = await toArrayBuffer(view);
+    } else if (body instanceof Uint8Array) {
+      content = await toArrayBuffer(body);
+    } else if (typeof body === "string") {
+      content = textToArrayBuffer(body);
+    } else {
+      content = body;
     }
-    if (body.buffer) {
-      // TypedArray
-      return body.buffer as ArrayBuffer;
-    }
-
-    throw new TypeError("Cannot handle body: " + body);
+    return content;
   }
 
-  private async toBody(content: Blob | ArrayBuffer | string) {
+  private async toBody(content: Blob | ArrayBuffer) {
     if (typeof content === "string") {
       return content;
     }
