@@ -1329,11 +1329,6 @@ fast-levenshtein@~2.0.6:
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha1-PYpcZog6FqMMqGQ+hR8Zuqd5eRc=
 
-fast-text-encoding@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/fast-text-encoding/-/fast-text-encoding-1.0.1.tgz#4a428566f74fc55ebdd447555b1eb4d9cf514455"
-  integrity sha512-x4FEgaz3zNRtJfLFqJmHWxkMDDvXVtaznj2V9jiP8ACUJrUgist4bP9FmDL2Vew2Y9mEQI/tG4GqabaitYp9CQ==
-
 fb-watchman@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/fb-watchman/-/fb-watchman-2.0.1.tgz#fc84fb39d2709cf3ff6d743706157bb5708a8a85"
@@ -2322,13 +2317,13 @@ kleur@^3.0.3:
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
-kura@^0.2.16:
-  version "0.2.16"
-  resolved "https://registry.yarnpkg.com/kura/-/kura-0.2.16.tgz#39dc26ce799bea90769ff6adabec526d1d04abd1"
-  integrity sha512-O0CGzuujlXy86W+NhXP34O8b3HjetSHkTZ97dVQuyikkGdB3+2hn3tPW8GqhjlXdluavdHdVG6OdE2cc7ec8NQ==
+kura@^0.2.23:
+  version "0.2.23"
+  resolved "https://registry.yarnpkg.com/kura/-/kura-0.2.23.tgz#6944e8a01a22d923880d05dfd2e5143fbe768cf7"
+  integrity sha512-/551spaG8TqP0QHaGf64mI8BV5LuPwluiKpdPG/mUsT0w5g6AbNvHV7ZD1Agdo60nwP7orq8U5ApZxG61jIFkQ==
   dependencies:
     base-64 "^0.1.0"
-    fast-text-encoding "^1.0.1"
+    text-encoding-shim "^1.0.5"
 
 leven@^3.1.0:
   version "3.1.0"
@@ -3400,6 +3395,11 @@ test-exclude@^6.0.0:
     "@istanbuljs/schema" "^0.1.2"
     glob "^7.1.4"
     minimatch "^3.0.4"
+
+text-encoding-shim@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/text-encoding-shim/-/text-encoding-shim-1.0.5.tgz#dfd9cde8dbbffe0c52be2fc277a6a65c66d23e41"
+  integrity sha512-H7yYW+jRn4yhu60ygZ2f/eMhXPITRt4QSUTKzLm+eCaDsdX8avmgWpmtmHAzesjBVUTAypz9odu5RKUjX5HNYA==
 
 throat@^5.0.0:
   version "5.0.0"

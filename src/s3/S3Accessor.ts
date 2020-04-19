@@ -2,7 +2,6 @@ import { AWSError } from "aws-sdk";
 import { DeleteObjectRequest, ListObjectsV2Request } from "aws-sdk/clients/s3";
 import {
   AbstractAccessor,
-  blobToArrayBuffer,
   DIR_SEPARATOR,
   FileSystem,
   FileSystemObject,
@@ -10,9 +9,10 @@ import {
   normalizePath,
   NotFoundError,
   NotReadableError,
+  toArrayBuffer,
+  toBlob,
   xhrGet,
   xhrPut,
-  base64ToArrayBuffer,
 } from "kura";
 import { S3FileSystem } from "./S3FileSystem";
 import { S3FileSystemOptions } from "./S3FileSystemOption";
@@ -115,8 +115,8 @@ export class S3Accessor extends AbstractAccessor {
     return this.doPutContentToS3(fullPath, buffer);
   }
 
-  protected doPutBase64(fullPath: string, base64: string): Promise<void> {
-    const buffer = base64ToArrayBuffer(base64);
+  protected async doPutBase64(fullPath: string, base64: string): Promise<void> {
+    const buffer = await toArrayBuffer(base64);
     return this.doPutContentToS3(fullPath, buffer);
   }
 
@@ -369,22 +369,11 @@ export class S3Accessor extends AbstractAccessor {
     }
     if (typeof process === "object") {
       // Node
-      let buffer: ArrayBuffer;
-      if (content instanceof Blob) {
-        buffer = await blobToArrayBuffer(content);
-      } else {
-        buffer = content;
-      }
-      const view = new Uint8Array(buffer);
-      return Buffer.from(view);
+      const buffer = await toArrayBuffer(content);
+      return Buffer.from(buffer);
     } else {
       // Web
-      let blob: Blob;
-      if (content instanceof ArrayBuffer) {
-        blob = new Blob([new Uint8Array(content)]);
-      } else {
-        blob = content;
-      }
+      const blob = toBlob(content);
       return blob;
     }
   }
