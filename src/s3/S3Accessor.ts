@@ -131,7 +131,8 @@ export class S3Accessor extends AbstractAccessor {
       const data = await this.s3
         .getObject({ Bucket: this.bucket, Key: key })
         .promise();
-      return data.Body;
+      const body = data.Body;
+      return this.fromBody(body);
     } catch (err) {
       if ((err as AWSError).statusCode === 404) {
         throw new NotFoundError(this.name, fullPath, err);
@@ -238,7 +239,7 @@ export class S3Accessor extends AbstractAccessor {
     fullPath: string,
     content: Blob | ArrayBuffer | string
   ) {
-    const body = await this.getBody(content);
+    const body = await this.toBody(content);
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
     const key = getKey(path);
     try {
@@ -258,7 +259,7 @@ export class S3Accessor extends AbstractAccessor {
     fullPath: string,
     content: Blob | ArrayBuffer | string
   ) {
-    const body = await this.getBody(content);
+    const body = await this.toBody(content);
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
     const key = getKey(path);
     await this.s3
@@ -277,7 +278,7 @@ export class S3Accessor extends AbstractAccessor {
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
     const key = getKey(path);
 
-    const body = await this.getBody(content);
+    const body = await this.toBody(content);
     const buffer = body as Uint8Array;
     const allSize = buffer.byteLength;
     const partSize = 1024 * 1024; // 1MB chunk
@@ -341,7 +342,28 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  private async getBody(content: Blob | ArrayBuffer | string) {
+  private async fromBody(body: any) {
+    // Buffer, Typed Array, Blob, String, ReadableStream
+    if (
+      body instanceof Blob ||
+      body instanceof ArrayBuffer ||
+      typeof body === "string"
+    ) {
+      return body;
+    }
+
+    if (typeof process === "object" && body instanceof Buffer) {
+      return new Uint8Array(body).buffer;
+    }
+    if (body.buffer) {
+      // TypedArray
+      return body.buffer as ArrayBuffer;
+    }
+
+    throw new TypeError("Cannot handle body: " + body);
+  }
+
+  private async toBody(content: Blob | ArrayBuffer | string) {
     if (typeof content === "string") {
       return content;
     }
