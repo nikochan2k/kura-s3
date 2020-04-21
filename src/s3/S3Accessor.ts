@@ -32,6 +32,7 @@ export class S3Accessor extends AbstractAccessor {
     private s3Options?: S3FileSystemOptions
   ) {
     super(s3Options);
+    config.signatureVersion = "v4";
     this.s3 = new S3(config);
     this.filesystem = new S3FileSystem(this);
     this.name = bucket + rootDir;
