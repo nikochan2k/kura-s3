@@ -9,11 +9,10 @@ import {
   normalizePath,
   NotFoundError,
   NotReadableError,
+  textToArrayBuffer,
   toArrayBuffer,
   toBlob,
-  xhrGet,
-  xhrPut,
-  textToArrayBuffer,
+  XHR,
 } from "kura";
 import { S3FileSystem } from "./S3FileSystem";
 import { S3FileSystemOptions } from "./S3FileSystemOption";
@@ -165,7 +164,8 @@ export class S3Accessor extends AbstractAccessor {
         Bucket: this.bucket,
         Key: key,
       });
-      return await xhrGet(url, responseType, this.name, fullPath);
+      const xhr = new XHR(this.name, fullPath);
+      return await xhr.get(url, responseType);
     } catch (err) {
       if ((err as AWSError).statusCode === 404) {
         throw new NotFoundError(this.name, fullPath, err);
@@ -340,7 +340,8 @@ export class S3Accessor extends AbstractAccessor {
         Bucket: this.bucket,
         Key: key,
       });
-      await xhrPut(url, content, this.name, fullPath);
+      const xhr = new XHR(this.name, fullPath);
+      await xhr.put(url, content);
     } catch (err) {
       throw new InvalidModificationError(this.name, fullPath, err);
     }
