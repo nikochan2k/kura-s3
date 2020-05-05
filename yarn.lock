@@ -676,10 +676,10 @@ atob@^2.1.2:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
-aws-sdk@^2.643.0:
-  version "2.643.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.643.0.tgz#0b4cc49165a25c42ab0503580806d367d32ffb88"
-  integrity sha512-4r7VGQFqshrhXnOCVQdlatAWiK/8kmmtAtY9gbITPNpY5Is+SfIy6k/1BgrnL5H/2sYd27H+Xp8itXZoCnQeTw==
+aws-sdk@^2.669.0:
+  version "2.669.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.669.0.tgz#7e8e7985120102da6bdbf40a18d8b9d692dea1ba"
+  integrity sha512-kuVcSRpDzvkgmeSmMX6Q32eTOb8UeihhUdavMrvUOP6fzSU19cNWS9HAIkYOi/jrEDK85cCZxXjxqE3JGZIGcw==
   dependencies:
     buffer "4.9.1"
     events "1.1.1"
@@ -2375,10 +2375,10 @@ kleur@^3.0.3:
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
-kura@^0.2.37:
-  version "0.2.37"
-  resolved "https://registry.yarnpkg.com/kura/-/kura-0.2.37.tgz#dfdb7f466a612301ed49cce2d7a17bc21d313ed7"
-  integrity sha512-rLkRbz09VZj0Vcr4qFfjY5I6LID3g0lrxwvotkoh6W7vGoc2qoUAx8/3XKXNguLwc3Rm+Jr+/gCV0hby5Z8x8A==
+kura@^0.2.38:
+  version "0.2.38"
+  resolved "https://registry.yarnpkg.com/kura/-/kura-0.2.38.tgz#21827ca4b38bfd4934a01e505407b4a2065357e6"
+  integrity sha512-cN+DyX6Ig88aChdONgbYAXhiNXe/keaYiYCIdsicAtg4PJ9gMR9K2MOStYKWU1s3n1M9bcIu2qHUe7qPPxf3bg==
   dependencies:
     base-64 "^0.1.0"
     text-encoding-shim "^1.0.5"
