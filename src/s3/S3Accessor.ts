@@ -1,4 +1,4 @@
-import { AWSError } from "aws-sdk";
+import { AWSError, config } from "aws-sdk";
 import { DeleteObjectRequest, ListObjectsV2Request } from "aws-sdk/clients/s3";
 import {
   AbstractAccessor,
@@ -31,6 +31,12 @@ export class S3Accessor extends AbstractAccessor {
     private s3Options?: S3FileSystemOptions
   ) {
     super(s3Options);
+    if (!config.httpOptions) {
+      config.httpOptions = {};
+    }
+    if (config.httpOptions.timeout == null) {
+      config.httpOptions.timeout = 3000;
+    }
     config.signatureVersion = "v4";
     this.s3 = new S3(config);
     this.filesystem = new S3FileSystem(this);
@@ -164,7 +170,9 @@ export class S3Accessor extends AbstractAccessor {
         Bucket: this.bucket,
         Key: key,
       });
-      const xhr = new XHR(this.name, fullPath);
+      const xhr = new XHR(this.name, fullPath, {
+        timeout: config.httpOptions.timeout,
+      });
       return await xhr.get(url, responseType);
     } catch (err) {
       if ((err as AWSError).statusCode === 404) {
@@ -340,7 +348,9 @@ export class S3Accessor extends AbstractAccessor {
         Bucket: this.bucket,
         Key: key,
       });
-      const xhr = new XHR(this.name, fullPath);
+      const xhr = new XHR(this.name, fullPath, {
+        timeout: config.httpOptions.timeout,
+      });
       await xhr.put(url, content);
     } catch (err) {
       throw new InvalidModificationError(this.name, fullPath, err);

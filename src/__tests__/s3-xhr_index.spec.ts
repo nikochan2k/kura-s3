@@ -15,11 +15,11 @@ const factory = new S3LocalFileSystemAsync(
   "web-file-system-test",
   "example",
   {
-    useIndex: true,
+    index: true,
+    indexOptions: { writeDelayMillis: 0 },
     verbose: true,
     methodOfDoPutContent: "xhr",
     methodOfDoGetContent: "xhr",
-    indexWriteDelayMillis: 0,
   }
 );
 testAll(factory, async () => {

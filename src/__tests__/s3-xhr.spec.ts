@@ -18,7 +18,6 @@ const factory = new S3LocalFileSystemAsync(
     verbose: true,
     methodOfDoPutContent: "xhr",
     methodOfDoGetContent: "xhr",
-    indexWriteDelayMillis: 0,
   }
 );
 testAll(factory, async () => {

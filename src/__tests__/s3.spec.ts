@@ -14,7 +14,7 @@ const factory = new S3LocalFileSystemAsync(
   config,
   "web-file-system-test",
   "/example/",
-  { verbose: true, indexWriteDelayMillis: 0 }
+  { verbose: true }
 );
 testAll(factory, async () => {
   const s3 = new S3(config);
