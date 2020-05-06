@@ -351,7 +351,12 @@ export class S3Accessor extends AbstractAccessor {
       const xhr = new XHR(this.name, fullPath, {
         timeout: config.httpOptions.timeout,
       });
-      await xhr.put(url, content);
+      if (content instanceof ArrayBuffer) {
+        const view = new Uint8Array(content);
+        await xhr.put(url, view);
+      } else {
+        await xhr.put(url, content);
+      }
     } catch (err) {
       throw new InvalidModificationError(this.name, fullPath, err);
     }
