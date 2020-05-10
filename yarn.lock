@@ -715,10 +715,10 @@ atob@^2.1.2:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
-aws-sdk@^2.670.0:
-  version "2.670.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.670.0.tgz#d54d18b9245df7b89bea96102e5bdebd99587701"
-  integrity sha512-hGRnZtp1wDUh6hZRBHO0Ki7thx/xbRlIEiTKlWes+f/0E1Nhm3KpelsBZ3L/Q6y1ragwkQd4Q720AmWEqemLyA==
+aws-sdk@^2.673.0:
+  version "2.673.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.673.0.tgz#5848900c90cfd8939602019df16fdc38d2a1cdbf"
+  integrity sha512-OoEPqTLmA5+4uSFf/k4ZLb8cEdx+CwlzovqGf6/gKvb8VrUxe5B5/d2RGlGM777Ke9TmuFhJtTIDugpgc2jo/Q==
   dependencies:
     buffer "4.9.1"
     events "1.1.1"
@@ -2406,10 +2406,10 @@ kleur@^3.0.3:
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
-kura@^0.2.52:
-  version "0.2.52"
-  resolved "https://registry.yarnpkg.com/kura/-/kura-0.2.52.tgz#361b12db00335d52121c8887916ef9893a474742"
-  integrity sha512-EFmGA65aXtDkX9A8JNA8m5MBUflZCQIiHpVo6/Pek2r9Jt7O1+sTkB6y/eOQAYfIqdSwz2panRO4U+vzW3WkSg==
+kura@^0.2.57:
+  version "0.2.57"
+  resolved "https://registry.yarnpkg.com/kura/-/kura-0.2.57.tgz#69483e812b63b0712d70ede98b0f56b4ced5a91a"
+  integrity sha512-lzlMys98KuG3+uJ9U95/4TMRDMY3PsKLYasFsoLqe0T2YDLczpcL9TQmOYJgYmgCpnkMoqeYQkrp+IK1Ntu3WA==
   dependencies:
     base-64 "^0.1.0"
     text-encoding-shim "^1.0.5"
@@ -3605,10 +3605,10 @@ tr46@^1.0.1:
   dependencies:
     punycode "^2.1.0"
 
-ts-jest@^25.5.0:
-  version "25.5.0"
-  resolved "https://registry.yarnpkg.com/ts-jest/-/ts-jest-25.5.0.tgz#f56f039b6caa15d9e32d064b0a8902886ab2fe72"
-  integrity sha512-govrjbOk1UEzcJ5cX5k8X8IUtFuP3lp3mrF3ZuKtCdAOQzdeCM7qualhb/U8s8SWFwEDutOqfF5PLkJ+oaYD4w==
+ts-jest@^25.5.1:
+  version "25.5.1"
+  resolved "https://registry.yarnpkg.com/ts-jest/-/ts-jest-25.5.1.tgz#2913afd08f28385d54f2f4e828be4d261f4337c7"
+  integrity sha512-kHEUlZMK8fn8vkxDjwbHlxXRB9dHYpyzqKIGDNxbzs+Rz+ssNDSDNusEK8Fk/sDd4xE6iKoQLfFkFVaskmTJyw==
   dependencies:
     bs-logger "0.x"
     buffer-from "1.x"

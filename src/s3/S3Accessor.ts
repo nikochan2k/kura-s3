@@ -134,13 +134,6 @@ export class S3Accessor extends AbstractAccessor {
     return this.doPutContentToS3(fullPath, blob);
   }
 
-  protected initialize(options: FileSystemOptions) {
-    if (options.shared == null) {
-      options.shared = true;
-    }
-    super.initialize(options);
-  }
-
   private async doGetContentUsingGetObject(fullPath: string) {
     try {
       const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
