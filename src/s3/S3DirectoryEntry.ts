@@ -80,11 +80,13 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
             fullPath: fullPath,
           });
           if (accessor.options.index) {
+            const obj: FileSystemObject = {
+              name: name,
+              fullPath: fullPath,
+            };
+            const record = accessor.createRecord(obj);
             accessor
-              .updateIndex({
-                name: name,
-                fullPath: fullPath,
-              })
+              .updateIndex(record, true)
               .then(() => {
                 successCallback(entry);
               })
