@@ -64,16 +64,6 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  async doGetContent(
-    fullPath: string
-  ): Promise<Blob | Uint8Array | ArrayBuffer | string> {
-    if (this.s3Options.methodOfDoGetContent === "xhr") {
-      return await this.doGetContentUsingXHR(fullPath, "arraybuffer");
-    } else {
-      return await this.doGetContentUsingGetObject(fullPath);
-    }
-  }
-
   async doGetObject(fullPath: string): Promise<FileSystemObject> {
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
     const key = getKey(path);
@@ -110,28 +100,41 @@ export class S3Accessor extends AbstractAccessor {
     };
 
     const objects: FileSystemObject[] = [];
-    await this.doGetObjectsFromS3(params, dirPath, path, objects);
+    await this.doReadObjectsFromS3(params, dirPath, path, objects);
     return objects;
   }
 
-  async doPutObject(obj: FileSystemObject) {
+  async doMakeDirectory(obj: FileSystemObject) {
     // NOOP
   }
 
-  protected doPutArrayBuffer(
+  async doReadContent(
+    fullPath: string
+  ): Promise<Blob | Uint8Array | ArrayBuffer | string> {
+    if (this.s3Options.methodOfDoGetContent === "xhr") {
+      return await this.doReadContentUsingXHR(fullPath, "arraybuffer");
+    } else {
+      return await this.doReadContentUsingGetObject(fullPath);
+    }
+  }
+
+  protected doWriteArrayBuffer(
     fullPath: string,
     buffer: ArrayBuffer
   ): Promise<void> {
-    return this.doPutContentToS3(fullPath, buffer);
+    return this.doReadContentToS3(fullPath, buffer);
   }
 
-  protected async doPutBase64(fullPath: string, base64: string): Promise<void> {
+  protected async doWriteBase64(
+    fullPath: string,
+    base64: string
+  ): Promise<void> {
     const buffer = await toArrayBuffer(base64);
-    return this.doPutContentToS3(fullPath, buffer);
+    return this.doReadContentToS3(fullPath, buffer);
   }
 
-  protected doPutBlob(fullPath: string, blob: Blob): Promise<void> {
-    return this.doPutContentToS3(fullPath, blob);
+  protected doWriteBlob(fullPath: string, blob: Blob): Promise<void> {
+    return this.doReadContentToS3(fullPath, blob);
   }
 
   protected initialize(options: FileSystemOptions) {
@@ -141,7 +144,29 @@ export class S3Accessor extends AbstractAccessor {
     super.initialize(options);
   }
 
-  private async doGetContentUsingGetObject(fullPath: string) {
+  private async doReadContentToS3(
+    fullPath: string,
+    content: Blob | ArrayBuffer
+  ) {
+    const method = this.s3Options.methodOfDoPutContent;
+
+    if (method === "xhr") {
+      await this.doWriteContentUsingXHR(fullPath, content);
+    } else if (method === "upload") {
+      await this.doWriteContentUsingUpload(fullPath, content);
+    } else if (method === "uploadPart") {
+      if (typeof content === "string") {
+        const blob = new Blob([content]);
+        await this.doWriteContentUsingUploadPart(fullPath, blob);
+      } else {
+        await this.doWriteContentUsingUploadPart(fullPath, content);
+      }
+    } else {
+      await this.doWriteContentUsingPutObject(fullPath, content);
+    }
+  }
+
+  private async doReadContentUsingGetObject(fullPath: string) {
     try {
       const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
       const key = getKey(path);
@@ -158,7 +183,7 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  private async doGetContentUsingXHR(
+  private async doReadContentUsingXHR(
     fullPath: string,
     responseType: XMLHttpRequestResponseType
   ) {
@@ -190,7 +215,7 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  private async doGetObjectsFromS3(
+  private async doReadObjectsFromS3(
     params: ListObjectsV2Request,
     dirPath: string,
     path: string,
@@ -229,33 +254,11 @@ export class S3Accessor extends AbstractAccessor {
 
     if (data.IsTruncated) {
       params.ContinuationToken = data.NextContinuationToken;
-      await this.doGetObjectsFromS3(params, dirPath, path, objects);
+      await this.doReadObjectsFromS3(params, dirPath, path, objects);
     }
   }
 
-  private async doPutContentToS3(
-    fullPath: string,
-    content: Blob | ArrayBuffer
-  ) {
-    const method = this.s3Options.methodOfDoPutContent;
-
-    if (method === "xhr") {
-      await this.doPutContentUsingXHR(fullPath, content);
-    } else if (method === "upload") {
-      await this.doPutContentUsingUpload(fullPath, content);
-    } else if (method === "uploadPart") {
-      if (typeof content === "string") {
-        const blob = new Blob([content]);
-        await this.doPutContentUsingUploadPart(fullPath, blob);
-      } else {
-        await this.doPutContentUsingUploadPart(fullPath, content);
-      }
-    } else {
-      await this.doPutContentUsingPutObject(fullPath, content);
-    }
-  }
-
-  private async doPutContentUsingPutObject(
+  private async doWriteContentUsingPutObject(
     fullPath: string,
     content: Blob | ArrayBuffer
   ) {
@@ -275,7 +278,7 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  private async doPutContentUsingUpload(
+  private async doWriteContentUsingUpload(
     fullPath: string,
     content: Blob | ArrayBuffer
   ) {
@@ -291,7 +294,7 @@ export class S3Accessor extends AbstractAccessor {
       .promise();
   }
 
-  private async doPutContentUsingUploadPart(
+  private async doWriteContentUsingUploadPart(
     fullPath: string,
     content: Blob | ArrayBuffer
   ) {
@@ -344,7 +347,7 @@ export class S3Accessor extends AbstractAccessor {
     await this.s3.completeMultipartUpload(completeReq).promise();
   }
 
-  private async doPutContentUsingXHR(
+  private async doWriteContentUsingXHR(
     fullPath: string,
     content: Blob | ArrayBuffer
   ) {
