@@ -548,10 +548,10 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-13.13.4.tgz#1581d6c16e3d4803eb079c87d4ac893ee7501c2c"
   integrity sha512-x26ur3dSXgv5AwKS0lNfbjpCakGIduWU1DU91Zz58ONRWrIKGunmZBNv4P7N+e27sJkiGDsw/3fT4AtsqQBrBA==
 
-"@types/node@^14.0.5":
-  version "14.0.5"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.0.5.tgz#3d03acd3b3414cf67faf999aed11682ed121f22b"
-  integrity sha512-90hiq6/VqtQgX8Sp0EzeIsv3r+ellbGj4URKj5j30tLlZvRUpnAe9YbYnjl3pJM93GyXU0tghHhvXHq+5rnCKA==
+"@types/node@^14.0.6":
+  version "14.0.6"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.0.6.tgz#f9e178b2da31a4b0ec60b64649e244c31ce18daf"
+  integrity sha512-FbNmu4F67d3oZMWBV6Y4MaPER+0EpE9eIYf2yaHhCWovc1dlXCZkqGX4NLHfVVr6umt20TNBdRzrNJIzIKfdbw==
 
 "@types/normalize-package-data@^2.4.0":
   version "2.4.0"
@@ -710,10 +710,10 @@ atob@^2.1.2:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
-aws-sdk@^2.683.0:
-  version "2.683.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.683.0.tgz#c374374a443790a9520b1b00a3f0d42085c42891"
-  integrity sha512-mi1175pJMbQhCWhBEQ5ccQ3SDE+SJzbapuAQtcb7tdLLV7dPKf4zQXhpqK1uG0dysm8NhsNtgxwA2diYOKWlTg==
+aws-sdk@^2.686.0:
+  version "2.686.0"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.686.0.tgz#c58c3874eff4c76c763d137df617e87971321eb7"
+  integrity sha512-QhYhJ5y8tUG5SlmY3CSf9RBaa3EFbta28oarOyiwceHKmY80cMCafRI1YypT6CVDx/q91dbnSNQfWhs0cZPbBQ==
   dependencies:
     buffer "4.9.1"
     events "1.1.1"
@@ -2442,10 +2442,10 @@ kleur@^3.0.3:
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
-kura@^0.2.78:
-  version "0.2.78"
-  resolved "https://registry.yarnpkg.com/kura/-/kura-0.2.78.tgz#3d1abcb2800bdd329c4853e80a5c0c531883ca98"
-  integrity sha512-ObkQUtjSVirmtPABORNabAnrfNwIN7GxuhjappvfURAdXatjRME6xr0wnbWM4Z5r762x2Ud/yRlN8GrghaJzEQ==
+kura@^0.2.79:
+  version "0.2.79"
+  resolved "https://registry.yarnpkg.com/kura/-/kura-0.2.79.tgz#1dfaaad7af149d49c30b3314efc2bce2d616e548"
+  integrity sha512-xt0OFUKXVB5egsd3QJggL+QKUXDXVjORyfqXKKiz50fiiGg9DesXMr6PYfGUkq/E9mMoO8t1N4iGMoIZelez9A==
   dependencies:
     base-64 "^0.1.0"
     text-encoding-shim "^1.0.5"

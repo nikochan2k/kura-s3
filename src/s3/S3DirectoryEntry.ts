@@ -86,7 +86,7 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
             };
             const record = accessor.createRecord(obj);
             accessor
-              .updateIndex(record)
+              .updateIndex(record, true)
               .then(() => {
                 successCallback(entry);
               })
