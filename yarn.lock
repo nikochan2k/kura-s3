@@ -2442,10 +2442,10 @@ kleur@^3.0.3:
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
-kura@^0.2.79:
-  version "0.2.79"
-  resolved "https://registry.yarnpkg.com/kura/-/kura-0.2.79.tgz#1dfaaad7af149d49c30b3314efc2bce2d616e548"
-  integrity sha512-xt0OFUKXVB5egsd3QJggL+QKUXDXVjORyfqXKKiz50fiiGg9DesXMr6PYfGUkq/E9mMoO8t1N4iGMoIZelez9A==
+kura@^0.2.88:
+  version "0.2.88"
+  resolved "https://registry.yarnpkg.com/kura/-/kura-0.2.88.tgz#59c7ecad663289aad402d1e04673885212339820"
+  integrity sha512-sKQibtcrEixHcb5kUkZJr7ItEA4Hx2I8AJ5jidKjvZQpyltYfTKZjYH/KC4B5eUsek+1SXc498F1rgpWr1Umdg==
   dependencies:
     base-64 "^0.1.0"
     text-encoding-shim "^1.0.5"
@@ -3623,10 +3623,10 @@ tr46@^2.0.2:
   dependencies:
     punycode "^2.1.1"
 
-ts-jest@^26.0.0:
-  version "26.0.0"
-  resolved "https://registry.yarnpkg.com/ts-jest/-/ts-jest-26.0.0.tgz#957b802978249aaf74180b9dcb17b4fd787ad6f3"
-  integrity sha512-eBpWH65mGgzobuw7UZy+uPP9lwu+tPp60o324ASRX4Ijg8UC5dl2zcge4kkmqr2Zeuk9FwIjvCTOPuNMEyGWWw==
+ts-jest@^26.1.0:
+  version "26.1.0"
+  resolved "https://registry.yarnpkg.com/ts-jest/-/ts-jest-26.1.0.tgz#e9070fc97b3ea5557a48b67c631c74eb35e15417"
+  integrity sha512-JbhQdyDMYN5nfKXaAwCIyaWLGwevcT2/dbqRPsQeh6NZPUuXjZQZEfeLb75tz0ubCIgEELNm6xAzTe5NXs5Y4Q==
   dependencies:
     bs-logger "0.x"
     buffer-from "1.x"
