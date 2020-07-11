@@ -15,19 +15,24 @@ const factory = new S3LocalFileSystemAsync(
   "web-file-system-test",
   "/example/",
   {
+    index: true,
+    indexOptions: { writeDelayMillis: 0 },
     verbose: true,
-    methodOfDoPutContent: "xhr",
-    methodOfDoGetContent: "xhr",
+    methodOfDoPutContent: "uploadPart",
   }
 );
-testAll(factory, async () => {
-  const s3 = new S3(config);
-  const bucket = "web-file-system-test";
-  try {
-    await s3.createBucket({ Bucket: bucket }).promise();
-  } catch (e) {}
-  const list = await s3.listObjectsV2({ Bucket: bucket }).promise();
-  for (const content of list.Contents) {
-    await s3.deleteObject({ Bucket: bucket, Key: content.Key }).promise();
-  }
-});
+testAll(
+  factory,
+  async () => {
+    const s3 = new S3(config);
+    const bucket = "web-file-system-test";
+    try {
+      await s3.createBucket({ Bucket: bucket }).promise();
+    } catch (e) {}
+    const list = await s3.listObjectsV2({ Bucket: bucket }).promise();
+    for (const content of list.Contents) {
+      await s3.deleteObject({ Bucket: bucket, Key: content.Key }).promise();
+    }
+  },
+  true
+);

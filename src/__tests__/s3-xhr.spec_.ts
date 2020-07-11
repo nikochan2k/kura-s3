@@ -13,8 +13,12 @@ const config: S3.ClientConfiguration = {
 const factory = new S3LocalFileSystemAsync(
   config,
   "web-file-system-test",
-  "example",
-  { index: true, indexOptions: { writeDelayMillis: 0 }, verbose: true }
+  "/example/",
+  {
+    verbose: true,
+    methodOfDoPutContent: "xhr",
+    methodOfDoGetContent: "xhr",
+  }
 );
 testAll(
   factory,
