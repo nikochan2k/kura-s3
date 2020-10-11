@@ -14,7 +14,6 @@ import {
   toBlob,
   XHR,
 } from "kura";
-import { FileSystemOptions } from "kura/lib/FileSystemOptions";
 import { S3FileSystem } from "./S3FileSystem";
 import { S3FileSystemOptions } from "./S3FileSystemOption";
 import { getKey, getPrefix } from "./S3Util";
@@ -135,13 +134,6 @@ export class S3Accessor extends AbstractAccessor {
 
   protected doWriteBlob(fullPath: string, blob: Blob): Promise<void> {
     return this.doReadContentToS3(fullPath, blob);
-  }
-
-  protected initialize(options: FileSystemOptions) {
-    if (options.shared == null) {
-      options.shared = true;
-    }
-    super.initialize(options);
   }
 
   private async doReadContentToS3(
