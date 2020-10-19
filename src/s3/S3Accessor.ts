@@ -200,10 +200,10 @@ export class S3Accessor extends AbstractAccessor {
       });
       return await xhr.get(url, responseType);
     } catch (err) {
-      if ((err as AWSError).statusCode === 404) {
-        throw new NotFoundError(this.name, fullPath, err);
+      if ((err as AWSError).statusCode !== 404) {
+        console.warn(err);
       }
-      throw new NotReadableError(this.name, fullPath, err);
+      throw new NotFoundError(this.name, fullPath, err);
     }
   }
 
@@ -216,10 +216,10 @@ export class S3Accessor extends AbstractAccessor {
     try {
       var data = await this.s3.listObjectsV2(params).promise();
     } catch (err) {
-      if ((err as AWSError).statusCode === 404) {
-        throw new NotFoundError(this.name, dirPath, err);
+      if ((err as AWSError).statusCode !== 404) {
+        console.warn(err);
       }
-      throw new NotReadableError(this.name, dirPath, err);
+      throw new NotFoundError(this.name, dirPath, err);
     }
     for (const content of data.CommonPrefixes) {
       const parts = content.Prefix.split(DIR_SEPARATOR);
