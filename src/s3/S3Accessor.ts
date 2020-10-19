@@ -2,6 +2,7 @@ import { AWSError, config } from "aws-sdk";
 import { DeleteObjectRequest, ListObjectsV2Request } from "aws-sdk/clients/s3";
 import {
   AbstractAccessor,
+  AbstractFileError,
   DIR_SEPARATOR,
   FileSystem,
   FileSystemObject,
@@ -56,6 +57,9 @@ export class S3Accessor extends AbstractAccessor {
     try {
       await this.s3.deleteObject(params).promise();
     } catch (err) {
+      if (err instanceof AbstractFileError) {
+        throw err;
+      }
       if ((err as AWSError).statusCode === 404) {
         throw new NotFoundError(this.name, fullPath, err);
       }
@@ -81,6 +85,9 @@ export class S3Accessor extends AbstractAccessor {
         size: data.ContentLength,
       };
     } catch (err) {
+      if (err instanceof AbstractFileError) {
+        throw err;
+      }
       if ((err as AWSError).statusCode === 404) {
         throw new NotFoundError(this.name, fullPath, err);
       }
@@ -168,6 +175,9 @@ export class S3Accessor extends AbstractAccessor {
       const body = data.Body;
       return this.fromBody(body);
     } catch (err) {
+      if (err instanceof AbstractFileError) {
+        throw err;
+      }
       if ((err as AWSError).statusCode === 404) {
         throw new NotFoundError(this.name, fullPath, err);
       }
@@ -183,14 +193,6 @@ export class S3Accessor extends AbstractAccessor {
       const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
       const key = getKey(path);
 
-      // check existance
-      await this.s3
-        .headObject({
-          Bucket: this.bucket,
-          Key: key,
-        })
-        .promise();
-
       const url = await this.s3.getSignedUrlPromise("getObject", {
         Bucket: this.bucket,
         Key: key,
@@ -200,10 +202,13 @@ export class S3Accessor extends AbstractAccessor {
       });
       return await xhr.get(url, responseType);
     } catch (err) {
-      if ((err as AWSError).statusCode !== 404) {
-        console.warn(err);
+      if (err instanceof AbstractFileError) {
+        throw err;
       }
-      throw new NotFoundError(this.name, fullPath, err);
+      if ((err as AWSError).statusCode === 404) {
+        throw new NotFoundError(this.name, fullPath, err);
+      }
+      throw new NotReadableError(this.name, fullPath, err);
     }
   }
 
@@ -216,10 +221,13 @@ export class S3Accessor extends AbstractAccessor {
     try {
       var data = await this.s3.listObjectsV2(params).promise();
     } catch (err) {
-      if ((err as AWSError).statusCode !== 404) {
-        console.warn(err);
+      if (err instanceof AbstractFileError) {
+        throw err;
       }
-      throw new NotFoundError(this.name, dirPath, err);
+      if ((err as AWSError).statusCode === 404) {
+        throw new NotFoundError(this.name, dirPath, err);
+      }
+      throw new NotReadableError(this.name, dirPath, err);
     }
     for (const content of data.CommonPrefixes) {
       const parts = content.Prefix.split(DIR_SEPARATOR);
@@ -266,6 +274,9 @@ export class S3Accessor extends AbstractAccessor {
         })
         .promise();
     } catch (err) {
+      if (err instanceof AbstractFileError) {
+        throw err;
+      }
       throw new InvalidModificationError(this.name, fullPath, err);
     }
   }
@@ -361,6 +372,9 @@ export class S3Accessor extends AbstractAccessor {
         await xhr.put(url, content);
       }
     } catch (err) {
+      if (err instanceof AbstractFileError) {
+        throw err;
+      }
       throw new InvalidModificationError(this.name, fullPath, err);
     }
   }
