@@ -170,7 +170,11 @@ export class S3Accessor extends AbstractAccessor {
       const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
       const key = getKey(path);
       const data = await this.s3
-        .getObject({ Bucket: this.bucket, Key: key })
+        .getObject({
+          Bucket: this.bucket,
+          Key: key,
+          ResponseCacheControl: "no-cache",
+        })
         .promise();
       const body = data.Body;
       return this.fromBody(body);
