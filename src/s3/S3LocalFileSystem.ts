@@ -1,6 +1,5 @@
 import { S3 } from "aws-sdk";
 import { AbstractAccessor, AbstractLocalFileSystem, normalizePath } from "kura";
-import { FileSystemOptions } from "kura/lib/FileSystemOptions";
 import { S3Accessor } from "./S3Accessor";
 import { S3FileSystemOptions } from "./S3FileSystemOption";
 
@@ -18,14 +17,17 @@ export class S3LocalFileSystem extends AbstractLocalFileSystem {
   }
 
   protected createAccessor(): Promise<AbstractAccessor> {
-    return new Promise<S3Accessor>(resolve => {
+    return new Promise<S3Accessor>((resolve, reject) => {
       const accessor = new S3Accessor(
         this.config,
         this.bucket,
         this.rootDir,
         this.s3Options
       );
-      resolve(accessor);
+      accessor
+        .init()
+        .then(() => resolve(accessor))
+        .catch((e) => reject(e));
     });
   }
 }

@@ -1,8 +1,7 @@
 import { S3 } from "aws-sdk";
 import { LocalFileSystemAsync } from "kura";
-import { FileSystemOptions } from "kura/lib/FileSystemOptions";
-import { S3LocalFileSystem } from "./S3LocalFileSystem";
 import { S3FileSystemOptions } from "./S3FileSystemOption";
+import { S3LocalFileSystem } from "./S3LocalFileSystem";
 
 export class S3LocalFileSystemAsync extends LocalFileSystemAsync {
   constructor(

@@ -1,5 +1,13 @@
 import { AWSError, config } from "aws-sdk";
-import { DeleteObjectRequest, ListObjectsV2Request } from "aws-sdk/clients/s3";
+import { ClientConfiguration } from "aws-sdk/clients/acm";
+import S3, {
+  CompletedMultipartUpload,
+  CompleteMultipartUploadRequest,
+  CreateMultipartUploadRequest,
+  DeleteObjectRequest,
+  ListObjectsV2Request,
+  UploadPartRequest,
+} from "aws-sdk/clients/s3";
 import {
   AbstractAccessor,
   AbstractFileError,
@@ -18,15 +26,22 @@ import {
 import { S3FileSystem } from "./S3FileSystem";
 import { S3FileSystemOptions } from "./S3FileSystemOption";
 import { getKey, getPrefix } from "./S3Util";
-import S3 = require("aws-sdk/clients/s3");
 
 export class S3Accessor extends AbstractAccessor {
-  filesystem: FileSystem;
-  name: string;
-  s3: S3;
+  // #region Properties (4)
+
+  private rootUrl: string;
+
+  public filesystem: FileSystem;
+  public name: string;
+  public s3: S3;
+
+  // #endregion Properties (4)
+
+  // #region Constructors (1)
 
   constructor(
-    config: S3.ClientConfiguration,
+    config: ClientConfiguration,
     private bucket: string,
     private rootDir: string,
     private s3Options?: S3FileSystemOptions
@@ -44,12 +59,15 @@ export class S3Accessor extends AbstractAccessor {
     this.name = bucket + rootDir;
   }
 
-  async doDelete(fullPath: string, isFile: boolean) {
+  // #endregion Constructors (1)
+
+  // #region Public Methods (7)
+
+  public async doDelete(fullPath: string, isFile: boolean) {
     if (!isFile) {
       return;
     }
-    const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
-    const key = getKey(path);
+    const key = this.getKey(fullPath);
     const params: DeleteObjectRequest = {
       Bucket: this.bucket,
       Key: key,
@@ -67,9 +85,8 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  async doGetObject(fullPath: string): Promise<FileSystemObject> {
-    const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
-    const key = getKey(path);
+  public async doGetObject(fullPath: string): Promise<FileSystemObject> {
+    const key = this.getKey(fullPath);
     try {
       const data = await this.s3
         .headObject({
@@ -95,7 +112,7 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  async doGetObjects(dirPath: string) {
+  public async doGetObjects(dirPath: string) {
     const path = normalizePath(this.rootDir + DIR_SEPARATOR + dirPath);
     const prefix = getPrefix(path);
     const params: ListObjectsV2Request = {
@@ -110,11 +127,11 @@ export class S3Accessor extends AbstractAccessor {
     return objects;
   }
 
-  async doMakeDirectory(obj: FileSystemObject) {
+  public async doMakeDirectory(obj: FileSystemObject) {
     // NOOP
   }
 
-  async doReadContent(
+  public async doReadContent(
     fullPath: string
   ): Promise<Blob | Uint8Array | ArrayBuffer | string> {
     if (this.s3Options.methodOfDoGetContent === "xhr") {
@@ -123,6 +140,26 @@ export class S3Accessor extends AbstractAccessor {
       return await this.doReadContentUsingGetObject(fullPath);
     }
   }
+
+  public async init() {
+    const dummy = Date.now().toString();
+    const dummyUrl = await this.s3.getSignedUrlPromise("getObject", {
+      Bucket: this.bucket,
+      Key: this.rootDir.substr(1) + "/" + dummy,
+    });
+    const length = dummyUrl.indexOf(dummy);
+    this.rootUrl = dummyUrl.substr(0, length);
+  }
+
+  public toURL(fullPath: string): string {
+    const key = this.getKey(fullPath);
+    const url = this.rootUrl + key;
+    return url;
+  }
+
+  // #endregion Public Methods (7)
+
+  // #region Protected Methods (3)
 
   protected doWriteArrayBuffer(
     fullPath: string,
@@ -142,6 +179,10 @@ export class S3Accessor extends AbstractAccessor {
   protected doWriteBlob(fullPath: string, blob: Blob): Promise<void> {
     return this.doReadContentToS3(fullPath, blob);
   }
+
+  // #endregion Protected Methods (3)
+
+  // #region Private Methods (11)
 
   private async doReadContentToS3(
     fullPath: string,
@@ -167,8 +208,7 @@ export class S3Accessor extends AbstractAccessor {
 
   private async doReadContentUsingGetObject(fullPath: string) {
     try {
-      const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
-      const key = getKey(path);
+      const key = this.getKey(fullPath);
       const data = await this.s3
         .getObject({
           Bucket: this.bucket,
@@ -194,13 +234,7 @@ export class S3Accessor extends AbstractAccessor {
     responseType: XMLHttpRequestResponseType
   ) {
     try {
-      const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
-      const key = getKey(path);
-
-      const url = await this.s3.getSignedUrlPromise("getObject", {
-        Bucket: this.bucket,
-        Key: key,
-      });
+      const url = this.toURL(fullPath);
       const xhr = new XHR(this.name, fullPath, {
         timeout: config.httpOptions.timeout,
       });
@@ -267,8 +301,7 @@ export class S3Accessor extends AbstractAccessor {
     content: Blob | ArrayBuffer
   ) {
     const body = await this.toBody(content);
-    const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
-    const key = getKey(path);
+    const key = this.getKey(fullPath);
     try {
       await this.s3
         .putObject({
@@ -290,8 +323,7 @@ export class S3Accessor extends AbstractAccessor {
     content: Blob | ArrayBuffer
   ) {
     const body = await this.toBody(content);
-    const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
-    const key = getKey(path);
+    const key = this.getKey(fullPath);
     await this.s3
       .upload({
         Bucket: this.bucket,
@@ -305,18 +337,17 @@ export class S3Accessor extends AbstractAccessor {
     fullPath: string,
     content: Blob | ArrayBuffer
   ) {
-    const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
-    const key = getKey(path);
+    const key = this.getKey(fullPath);
 
     const buffer = await toArrayBuffer(content); // TODO
     const view = new Uint8Array(buffer);
     const allSize = view.byteLength;
     const partSize = 1024 * 1024; // 1MB chunk
-    const multipartMap: S3.CompletedMultipartUpload = {
+    const multipartMap: CompletedMultipartUpload = {
       Parts: [],
     };
 
-    const createReq: S3.CreateMultipartUploadRequest = {
+    const createReq: CreateMultipartUploadRequest = {
       Bucket: this.bucket,
       Key: key,
     };
@@ -331,7 +362,7 @@ export class S3Accessor extends AbstractAccessor {
       partNum++;
       const end = Math.min(rangeStart + partSize, allSize);
       const chunk = view.slice(rangeStart, end);
-      const partParams: S3.UploadPartRequest = {
+      const partParams: UploadPartRequest = {
         Body: chunk,
         PartNumber: partNum,
         UploadId: uploadId,
@@ -345,7 +376,7 @@ export class S3Accessor extends AbstractAccessor {
       };
     }
 
-    const completeReq: S3.CompleteMultipartUploadRequest = {
+    const completeReq: CompleteMultipartUploadRequest = {
       ...otherParams,
       MultipartUpload: multipartMap,
       UploadId: uploadId,
@@ -359,8 +390,7 @@ export class S3Accessor extends AbstractAccessor {
     content: Blob | ArrayBuffer
   ) {
     try {
-      const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
-      const key = getKey(path);
+      const key = this.getKey(fullPath);
 
       const url = await this.s3.getSignedUrlPromise("putObject", {
         Bucket: this.bucket,
@@ -398,6 +428,12 @@ export class S3Accessor extends AbstractAccessor {
     return content;
   }
 
+  private getKey(fullPath: string) {
+    const path = normalizePath(this.rootDir + DIR_SEPARATOR + fullPath);
+    const key = getKey(path);
+    return key;
+  }
+
   private async toBody(content: Blob | ArrayBuffer) {
     if (typeof content === "string") {
       return content;
@@ -412,4 +448,6 @@ export class S3Accessor extends AbstractAccessor {
       return blob;
     }
   }
+
+  // #endregion Private Methods (11)
 }
