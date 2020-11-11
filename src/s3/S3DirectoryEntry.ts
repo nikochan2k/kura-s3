@@ -30,7 +30,7 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
     const fullPath = resolveToFullPath(this.fullPath, path);
 
     this.params.accessor
-      .getObject(fullPath)
+      .getObject(fullPath, false)
       .then(async (obj) => {
         if (fullPath === "/") {
           successCallback(this.filesystem.root);
