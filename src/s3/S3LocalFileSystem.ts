@@ -4,7 +4,13 @@ import { S3Accessor } from "./S3Accessor";
 import { S3FileSystemOptions } from "./S3FileSystemOption";
 
 export class S3LocalFileSystem extends AbstractLocalFileSystem {
+  // #region Properties (1)
+
   private rootDir: string;
+
+  // #endregion Properties (1)
+
+  // #region Constructors (1)
 
   constructor(
     private config: S3.ClientConfiguration,
@@ -15,6 +21,10 @@ export class S3LocalFileSystem extends AbstractLocalFileSystem {
     super(s3Options);
     this.rootDir = normalizePath(roorDir);
   }
+
+  // #endregion Constructors (1)
+
+  // #region Protected Methods (1)
 
   protected createAccessor(): Promise<AbstractAccessor> {
     return new Promise<S3Accessor>((resolve, reject) => {
@@ -30,4 +40,6 @@ export class S3LocalFileSystem extends AbstractLocalFileSystem {
         .catch((e) => reject(e));
     });
   }
+
+  // #endregion Protected Methods (1)
 }
