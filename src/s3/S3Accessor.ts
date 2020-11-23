@@ -22,6 +22,7 @@ import {
   toArrayBuffer,
   toBlob,
   XHR,
+  deepCopy,
 } from "kura";
 import { S3FileSystem } from "./S3FileSystem";
 import { S3FileSystemOptions } from "./S3FileSystemOption";
