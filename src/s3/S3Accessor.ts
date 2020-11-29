@@ -22,7 +22,6 @@ import {
   toArrayBuffer,
   toBlob,
   XHR,
-  deepCopy,
 } from "kura";
 import { S3FileSystem } from "./S3FileSystem";
 import { S3FileSystemOptions } from "./S3FileSystemOption";
@@ -140,10 +139,6 @@ export class S3Accessor extends AbstractAccessor {
     } else {
       return await this.doReadContentUsingGetObject(fullPath);
     }
-  }
-
-  public hasDirectory() {
-    return false;
   }
 
   public async init() {
