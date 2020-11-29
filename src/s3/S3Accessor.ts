@@ -62,7 +62,7 @@ export class S3Accessor extends AbstractAccessor {
 
   // #endregion Constructors (1)
 
-  // #region Public Methods (7)
+  // #region Public Methods (8)
 
   public async doDelete(fullPath: string, isFile: boolean) {
     if (!isFile) {
@@ -142,6 +142,10 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
+  public hasDirectory() {
+    return false;
+  }
+
   public async init() {
     const dummy = Date.now().toString();
     const dummyUrl = await this.s3.getSignedUrlPromise("getObject", {
@@ -158,7 +162,7 @@ export class S3Accessor extends AbstractAccessor {
     return url;
   }
 
-  // #endregion Public Methods (7)
+  // #endregion Public Methods (8)
 
   // #region Protected Methods (3)
 
@@ -239,7 +243,7 @@ export class S3Accessor extends AbstractAccessor {
       const xhr = new XHR(this.name, fullPath, {
         timeout: config.httpOptions.timeout,
       });
-      return await xhr.get(url, responseType);
+      return xhr.get(url, responseType);
     } catch (err) {
       if (err instanceof AbstractFileError) {
         throw err;
