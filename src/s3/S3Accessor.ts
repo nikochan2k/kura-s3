@@ -51,12 +51,16 @@ export class S3Accessor extends AbstractAccessor {
       config.httpOptions = {};
     }
     if (config.httpOptions.timeout == null) {
-      config.httpOptions.timeout = 3000;
+      config.httpOptions.timeout = 30000;
+      config.httpOptions.connectTimeout = 2000;
     }
     config.signatureVersion = "v4";
     this.s3 = new S3(config);
     this.filesystem = new S3FileSystem(this);
-    this.name = bucket + rootDir;
+    if (!this.rootDir.startsWith(DIR_SEPARATOR)) {
+      this.rootDir = DIR_SEPARATOR + this.rootDir;
+    }
+    this.name = this.bucket + this.rootDir;
   }
 
   // #endregion Constructors (1)
@@ -145,7 +149,7 @@ export class S3Accessor extends AbstractAccessor {
     const dummy = Date.now().toString();
     const dummyUrl = await this.s3.getSignedUrlPromise("getObject", {
       Bucket: this.bucket,
-      Key: this.rootDir.substr(1) + "/" + dummy,
+      Key: this.rootDir.substr(1) + DIR_SEPARATOR + dummy,
     });
     const length = dummyUrl.indexOf(dummy);
     this.rootUrl = dummyUrl.substr(0, length);
