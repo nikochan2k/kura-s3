@@ -1,13 +1,5 @@
 import { DIR_SEPARATOR } from "kura";
 
-export function getPath(key: string) {
-  let path = "";
-  if (0 < key.length) {
-    path = "/" + key;
-  }
-  return path;
-}
-
 export function getKey(fullPath: string) {
   let key = "";
   if (0 < fullPath.length) {
