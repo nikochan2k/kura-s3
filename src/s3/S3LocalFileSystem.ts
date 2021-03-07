@@ -34,10 +34,7 @@ export class S3LocalFileSystem extends AbstractLocalFileSystem {
         this.rootDir,
         this.s3Options
       );
-      accessor
-        .init()
-        .then(() => resolve(accessor))
-        .catch((e) => reject(e));
+      resolve(accessor);
     });
   }
 

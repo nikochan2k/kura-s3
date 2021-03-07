@@ -28,15 +28,13 @@ import { S3FileSystemOptions } from "./S3FileSystemOption";
 import { getKey, getPrefix } from "./S3Util";
 
 export class S3Accessor extends AbstractAccessor {
-  // #region Properties (4)
-
-  private rootUrl: string;
+  // #region Properties (3)
 
   public filesystem: FileSystem;
   public name: string;
   public s3: S3;
 
-  // #endregion Properties (4)
+  // #endregion Properties (3)
 
   // #region Constructors (1)
 
@@ -65,7 +63,7 @@ export class S3Accessor extends AbstractAccessor {
 
   // #endregion Constructors (1)
 
-  // #region Public Methods (8)
+  // #region Public Methods (5)
 
   public async doDelete(fullPath: string, isFile: boolean) {
     if (!isFile) {
@@ -99,11 +97,16 @@ export class S3Accessor extends AbstractAccessor {
         })
         .promise();
       const name = key.split(DIR_SEPARATOR).pop();
+      const url = await this.s3.getSignedUrlPromise("getObject", {
+        Bucket: this.bucket,
+        Key: key,
+      });
       return {
-        name: name,
+        name,
         fullPath: fullPath,
         lastModified: data.LastModified.getTime(),
         size: data.ContentLength,
+        url,
       };
     } catch (err) {
       if (err instanceof AbstractFileError) {
@@ -145,23 +148,7 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  public async init() {
-    const dummy = Date.now().toString();
-    const dummyUrl = await this.s3.getSignedUrlPromise("getObject", {
-      Bucket: this.bucket,
-      Key: this.rootDir.substr(1) + DIR_SEPARATOR + dummy,
-    });
-    const length = dummyUrl.indexOf(dummy);
-    this.rootUrl = dummyUrl.substr(0, length);
-  }
-
-  public toURL(fullPath: string): string {
-    const key = this.getKey(fullPath);
-    const url = this.rootUrl + key;
-    return url;
-  }
-
-  // #endregion Public Methods (8)
+  // #endregion Public Methods (5)
 
   // #region Protected Methods (3)
 
@@ -238,11 +225,11 @@ export class S3Accessor extends AbstractAccessor {
     responseType: XMLHttpRequestResponseType
   ) {
     try {
-      const url = this.toURL(fullPath);
+      const obj = await this.doGetObject(fullPath);
       const xhr = new XHR(this.name, fullPath, {
         timeout: config.httpOptions.timeout,
       });
-      return xhr.get(url, responseType);
+      return xhr.get(obj.url, responseType);
     } catch (err) {
       if (err instanceof AbstractFileError) {
         throw err;

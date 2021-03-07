@@ -10,6 +10,7 @@ import {
   Flags,
   InvalidModificationError,
   NotFoundError,
+  NotImplementedError,
   onError,
   resolveToFullPath,
 } from "kura";
@@ -25,7 +26,7 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
 
   // #endregion Constructors (1)
 
-  // #region Public Methods (1)
+  // #region Public Methods (2)
 
   public getDirectory(
     path: string,
@@ -107,7 +108,15 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
       });
   }
 
-  // #endregion Public Methods (1)
+  public toURL(): string {
+    throw new NotImplementedError(
+      this.filesystem.name,
+      this.params.fullPath,
+      "toURL"
+    );
+  }
+
+  // #endregion Public Methods (2)
 
   // #region Protected Methods (3)
 
