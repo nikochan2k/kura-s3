@@ -100,6 +100,7 @@ export class S3Accessor extends AbstractAccessor {
       const url = await this.s3.getSignedUrlPromise("getObject", {
         Bucket: this.bucket,
         Key: key,
+        Expires: 60 * 60 * 24 * 7,
       });
       return {
         name,
@@ -386,6 +387,7 @@ export class S3Accessor extends AbstractAccessor {
       const url = await this.s3.getSignedUrlPromise("putObject", {
         Bucket: this.bucket,
         Key: key,
+        Expires: 60 * 60 * 24 * 7,
       });
       const xhr = new XHR(this.name, fullPath, {
         timeout: config.httpOptions.timeout,
