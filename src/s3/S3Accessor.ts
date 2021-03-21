@@ -23,6 +23,7 @@ import {
   toBlob,
   XHR,
 } from "kura";
+import { FileSystemOptions } from "kura/lib/FileSystemOptions";
 import { S3FileSystem } from "./S3FileSystem";
 import { S3FileSystemOptions } from "./S3FileSystemOption";
 import { getKey, getPrefix } from "./S3Util";
@@ -151,7 +152,7 @@ export class S3Accessor extends AbstractAccessor {
 
   // #endregion Public Methods (5)
 
-  // #region Protected Methods (3)
+  // #region Protected Methods (6)
 
   protected doWriteArrayBuffer(
     fullPath: string,
@@ -172,7 +173,36 @@ export class S3Accessor extends AbstractAccessor {
     return this.doReadContentToS3(fullPath, blob);
   }
 
-  // #endregion Protected Methods (3)
+  protected initialize(options: FileSystemOptions) {
+    this.initializeIndexOptions(options);
+
+    if (options.contentsCache == null) {
+      options.contentsCache = false;
+    }
+    this.initializeContentsCacheOptions(options);
+
+    this.debug("S3Accessor#initialize", JSON.stringify(options));
+  }
+
+  protected initializeIndexOptions(options: FileSystemOptions) {
+    if (!options.index) {
+      return;
+    }
+
+    if (options.indexOptions == null) {
+      options.indexOptions = {};
+    }
+
+    const indexOptions = options.indexOptions;
+    if (indexOptions.noCache == null) {
+      indexOptions.noCache = true;
+    }
+    if (indexOptions.logicalDelete == null) {
+      indexOptions.logicalDelete = false;
+    }
+  }
+
+  // #endregion Protected Methods (6)
 
   // #region Private Methods (11)
 
