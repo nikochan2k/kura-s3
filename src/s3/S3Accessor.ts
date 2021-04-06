@@ -14,6 +14,7 @@ import {
   DIR_SEPARATOR,
   FileSystem,
   FileSystemObject,
+  INDEX_DIR,
   InvalidModificationError,
   normalizePath,
   NotFoundError,
@@ -64,7 +65,16 @@ export class S3Accessor extends AbstractAccessor {
 
   // #endregion Constructors (1)
 
-  // #region Public Methods (5)
+  // #region Public Methods (6)
+
+  public async createIndexDir(dirPath: string) {
+    let indexDir = INDEX_DIR + dirPath;
+    if (!indexDir.endsWith(DIR_SEPARATOR)) {
+      indexDir += DIR_SEPARATOR;
+    }
+
+    return indexDir;
+  }
 
   public async doDelete(fullPath: string, isFile: boolean) {
     if (!isFile) {
@@ -150,9 +160,9 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  // #endregion Public Methods (5)
+  // #endregion Public Methods (6)
 
-  // #region Protected Methods (6)
+  // #region Protected Methods (5)
 
   protected doWriteArrayBuffer(
     fullPath: string,
@@ -202,7 +212,7 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  // #endregion Protected Methods (6)
+  // #endregion Protected Methods (5)
 
   // #region Private Methods (11)
 
