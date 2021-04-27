@@ -50,8 +50,9 @@ export class S3Accessor extends AbstractAccessor {
     if (!config.httpOptions) {
       config.httpOptions = {};
     }
+    config.maxRetries = 0;
     if (config.httpOptions.timeout == null) {
-      config.httpOptions.timeout = 30000;
+      config.httpOptions.timeout = 2000;
       config.httpOptions.connectTimeout = 2000;
     }
     config.signatureVersion = "v4";
