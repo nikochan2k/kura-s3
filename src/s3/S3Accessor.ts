@@ -163,23 +163,6 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  public async transfer(
-    fromAccessor: AbstractAccessor,
-    fromObj: FileSystemObject,
-    toObj: FileSystemObject
-  ) {
-    const fromUrl = fromObj.url;
-    const toUrl = await this.getSignedUrl(toObj.fullPath, "getObject");
-    const xhr = new XHR();
-    let content: string | BufferSource | Blob;
-    if (fromUrl) {
-      content = await xhr.get(fromUrl, hasBuffer ? "arraybuffer" : "blob");
-    } else {
-      content = await fromAccessor.doReadContent(fromObj.fullPath);
-    }
-    await xhr.put(toUrl, content);
-  }
-
   // #endregion Public Methods (7)
 
   // #region Protected Methods (6)
