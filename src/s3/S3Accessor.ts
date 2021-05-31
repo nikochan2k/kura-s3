@@ -14,6 +14,7 @@ import {
   DIR_SEPARATOR,
   FileSystem,
   FileSystemObject,
+  hasBuffer,
   INDEX_DIR,
   InvalidModificationError,
   normalizePath,
@@ -32,15 +33,13 @@ import { getKey, getPrefix } from "./S3Util";
 const EXPIRES = 60 * 60 * 24 * 7;
 
 export class S3Accessor extends AbstractAccessor {
-  // #region Properties (4)
-
-  private hasBuffer;
+  // #region Properties (3)
 
   public filesystem: FileSystem;
   public name: string;
   public s3: S3;
 
-  // #endregion Properties (4)
+  // #endregion Properties (3)
 
   // #region Constructors (1)
 
@@ -66,15 +65,11 @@ export class S3Accessor extends AbstractAccessor {
       this.rootDir = DIR_SEPARATOR + this.rootDir;
     }
     this.name = this.bucket + this.rootDir;
-
-    this.hasBuffer =
-      typeof process === "object" ||
-      (navigator && navigator.product === "ReactNative");
   }
 
   // #endregion Constructors (1)
 
-  // #region Public Methods (6)
+  // #region Public Methods (7)
 
   public async createIndexDir(dirPath: string) {
     let indexDir = INDEX_DIR + dirPath;
@@ -117,11 +112,7 @@ export class S3Accessor extends AbstractAccessor {
         })
         .promise();
       const name = key.split(DIR_SEPARATOR).pop();
-      const url = await this.s3.getSignedUrlPromise("getObject", {
-        Bucket: this.bucket,
-        Key: key,
-        Expires: EXPIRES,
-      });
+      const url = await this.getSignedUrl(fullPath, "getObject");
       return {
         name,
         fullPath: fullPath,
@@ -165,14 +156,31 @@ export class S3Accessor extends AbstractAccessor {
     if (this.s3Options.methodOfDoGetContent === "xhr") {
       return await this.doReadContentUsingXHR(
         fullPath,
-        this.hasBuffer ? "arraybuffer" : "blob"
+        hasBuffer ? "arraybuffer" : "blob"
       );
     } else {
       return await this.doReadContentUsingGetObject(fullPath);
     }
   }
 
-  // #endregion Public Methods (6)
+  public async transfer(
+    fromAccessor: AbstractAccessor,
+    fromObj: FileSystemObject,
+    toObj: FileSystemObject
+  ) {
+    const fromUrl = fromObj.url;
+    const toUrl = await this.getSignedUrl(toObj.fullPath, "getObject");
+    const xhr = new XHR();
+    let content: string | BufferSource | Blob;
+    if (fromUrl) {
+      content = await xhr.get(fromUrl, hasBuffer ? "arraybuffer" : "blob");
+    } else {
+      content = await fromAccessor.doReadContent(fromObj.fullPath);
+    }
+    await xhr.put(toUrl, content);
+  }
+
+  // #endregion Public Methods (7)
 
   // #region Protected Methods (6)
 
@@ -233,7 +241,7 @@ export class S3Accessor extends AbstractAccessor {
 
   // #endregion Protected Methods (6)
 
-  // #region Private Methods (11)
+  // #region Private Methods (12)
 
   private async doReadContentUsingGetObject(fullPath: string) {
     try {
@@ -259,9 +267,7 @@ export class S3Accessor extends AbstractAccessor {
   ) {
     try {
       const obj = await this.doGetObject(fullPath);
-      const xhr = new XHR(this.name, fullPath, {
-        timeout: config.httpOptions.timeout,
-      });
+      const xhr = new XHR({ timeout: config.httpOptions.timeout });
       return xhr.get(obj.url, responseType);
     } catch (err) {
       if (err instanceof AbstractFileError) {
@@ -327,7 +333,7 @@ export class S3Accessor extends AbstractAccessor {
     const method = this.s3Options.methodOfDoPutContent;
 
     if (method === "xhr") {
-      if (this.hasBuffer) {
+      if (hasBuffer) {
         content = await toArrayBuffer(content);
       } else {
         content = toBlob(content);
@@ -338,7 +344,7 @@ export class S3Accessor extends AbstractAccessor {
       content = await toArrayBuffer(content);
       await this.doWriteContentUsingUploadPart(fullPath, content);
     } else {
-      if (this.hasBuffer) {
+      if (hasBuffer) {
         content = await toBuffer(content);
       } else {
         content = toBlob(content);
@@ -443,17 +449,8 @@ export class S3Accessor extends AbstractAccessor {
     content: Blob | BufferSource
   ) {
     try {
-      const key = this.getKey(fullPath);
-
-      const url = await this.s3.getSignedUrlPromise("putObject", {
-        Bucket: this.bucket,
-        Key: key,
-        Expires: EXPIRES,
-      });
-      const xhr = new XHR(this.name, fullPath, {
-        timeout: config.httpOptions.timeout,
-      });
-
+      const url = await this.getSignedUrl(fullPath, "putObject");
+      const xhr = new XHR({ timeout: config.httpOptions.timeout });
       await xhr.put(url, content);
     } catch (err) {
       if (err instanceof AbstractFileError) {
@@ -482,7 +479,7 @@ export class S3Accessor extends AbstractAccessor {
         });
       });
     }
-    if (this.hasBuffer) {
+    if (hasBuffer) {
       return toBuffer(body as any);
     }
     return body as any;
@@ -494,9 +491,19 @@ export class S3Accessor extends AbstractAccessor {
     return key;
   }
 
+  private async getSignedUrl(fullPath: string, operation: string) {
+    const key = this.getKey(fullPath);
+    const url = await this.s3.getSignedUrlPromise(operation, {
+      Bucket: this.bucket,
+      Key: key,
+      Expires: EXPIRES,
+    });
+    return url;
+  }
+
   private isReadable(value: any) {
     return typeof value.on === "function";
   }
 
-  // #endregion Private Methods (11)
+  // #endregion Private Methods (12)
 }
