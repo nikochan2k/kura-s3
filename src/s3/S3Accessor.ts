@@ -112,13 +112,11 @@ export class S3Accessor extends AbstractAccessor {
         })
         .promise();
       const name = key.split(DIR_SEPARATOR).pop();
-      const url = await this.getSignedUrl(fullPath, "getObject");
       return {
         name,
         fullPath: fullPath,
         lastModified: data.LastModified.getTime(),
         size: data.ContentLength,
-        url,
       };
     } catch (err) {
       if (err instanceof AbstractFileError) {
@@ -161,6 +159,10 @@ export class S3Accessor extends AbstractAccessor {
     } else {
       return await this.doReadContentUsingGetObject(fullPath);
     }
+  }
+
+  public async getURL(fullPath: string): Promise<string> {
+    return this.getSignedUrl(fullPath, "getObject");
   }
 
   // #endregion Public Methods (7)
@@ -249,9 +251,9 @@ export class S3Accessor extends AbstractAccessor {
     responseType: XMLHttpRequestResponseType
   ) {
     try {
-      const obj = await this.doGetObject(fullPath);
+      const url = await this.getSignedUrl(fullPath, "getObject");
       const xhr = new XHR({ timeout: config.httpOptions.timeout });
-      return xhr.get(obj.url, responseType);
+      return xhr.get(url, responseType);
     } catch (err) {
       if (err instanceof AbstractFileError) {
         throw err;
@@ -474,7 +476,10 @@ export class S3Accessor extends AbstractAccessor {
     return key;
   }
 
-  private async getSignedUrl(fullPath: string, operation: string) {
+  private async getSignedUrl(
+    fullPath: string,
+    operation: "getObject" | "putObject"
+  ) {
     const key = this.getKey(fullPath);
     const url = await this.s3.getSignedUrlPromise(operation, {
       Bucket: this.bucket,
