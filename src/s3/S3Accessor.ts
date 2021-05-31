@@ -14,6 +14,7 @@ import {
   DIR_SEPARATOR,
   FileSystem,
   FileSystemObject,
+  FileSystemOptions,
   hasBuffer,
   INDEX_DIR,
   InvalidModificationError,
@@ -25,7 +26,6 @@ import {
   toBuffer,
   XHR,
 } from "kura";
-import { FileSystemOptions } from "kura/lib/FileSystemOptions";
 import { S3FileSystem } from "./S3FileSystem";
 import { S3FileSystemOptions } from "./S3FileSystemOption";
 import { getKey, getPrefix } from "./S3Util";
