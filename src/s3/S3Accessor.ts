@@ -19,9 +19,9 @@ import {
   normalizePath,
   NotFoundError,
   NotReadableError,
-  textToArrayBuffer,
   toArrayBuffer,
   toBlob,
+  toBuffer,
   XHR,
 } from "kura";
 import { FileSystemOptions } from "kura/lib/FileSystemOptions";
@@ -29,14 +29,18 @@ import { S3FileSystem } from "./S3FileSystem";
 import { S3FileSystemOptions } from "./S3FileSystemOption";
 import { getKey, getPrefix } from "./S3Util";
 
+const EXPIRES = 60 * 60 * 24 * 7;
+
 export class S3Accessor extends AbstractAccessor {
-  // #region Properties (3)
+  // #region Properties (4)
+
+  private hasBuffer;
 
   public filesystem: FileSystem;
   public name: string;
   public s3: S3;
 
-  // #endregion Properties (3)
+  // #endregion Properties (4)
 
   // #region Constructors (1)
 
@@ -62,6 +66,10 @@ export class S3Accessor extends AbstractAccessor {
       this.rootDir = DIR_SEPARATOR + this.rootDir;
     }
     this.name = this.bucket + this.rootDir;
+
+    this.hasBuffer =
+      typeof process === "object" ||
+      (navigator && navigator.product === "ReactNative");
   }
 
   // #endregion Constructors (1)
@@ -112,7 +120,7 @@ export class S3Accessor extends AbstractAccessor {
       const url = await this.s3.getSignedUrlPromise("getObject", {
         Bucket: this.bucket,
         Key: key,
-        Expires: 60 * 60 * 24 * 7,
+        Expires: EXPIRES,
       });
       return {
         name,
@@ -153,9 +161,12 @@ export class S3Accessor extends AbstractAccessor {
 
   public async doReadContent(
     fullPath: string
-  ): Promise<Blob | Uint8Array | ArrayBuffer | string> {
+  ): Promise<Blob | BufferSource | string> {
     if (this.s3Options.methodOfDoGetContent === "xhr") {
-      return await this.doReadContentUsingXHR(fullPath, "arraybuffer");
+      return await this.doReadContentUsingXHR(
+        fullPath,
+        this.hasBuffer ? "arraybuffer" : "blob"
+      );
     } else {
       return await this.doReadContentUsingGetObject(fullPath);
     }
@@ -163,13 +174,13 @@ export class S3Accessor extends AbstractAccessor {
 
   // #endregion Public Methods (6)
 
-  // #region Protected Methods (5)
+  // #region Protected Methods (6)
 
   protected doWriteArrayBuffer(
     fullPath: string,
     buffer: ArrayBuffer
   ): Promise<void> {
-    return this.doReadContentToS3(fullPath, buffer);
+    return this.doWriteContentToS3(fullPath, buffer);
   }
 
   protected async doWriteBase64(
@@ -177,11 +188,18 @@ export class S3Accessor extends AbstractAccessor {
     base64: string
   ): Promise<void> {
     const buffer = await toArrayBuffer(base64);
-    return this.doReadContentToS3(fullPath, buffer);
+    return this.doWriteContentToS3(fullPath, buffer);
   }
 
   protected doWriteBlob(fullPath: string, blob: Blob): Promise<void> {
-    return this.doReadContentToS3(fullPath, blob);
+    return this.doWriteContentToS3(fullPath, blob);
+  }
+
+  protected async doWriteBuffer(
+    fullPath: string,
+    buffer: Buffer
+  ): Promise<void> {
+    return this.doWriteContentToS3(fullPath, buffer);
   }
 
   protected initialize(options: FileSystemOptions) {
@@ -213,44 +231,17 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  // #endregion Protected Methods (5)
+  // #endregion Protected Methods (6)
 
   // #region Private Methods (11)
-
-  private async doReadContentToS3(
-    fullPath: string,
-    content: Blob | ArrayBuffer
-  ) {
-    const method = this.s3Options.methodOfDoPutContent;
-
-    if (method === "xhr") {
-      await this.doWriteContentUsingXHR(fullPath, content);
-    } else if (method === "upload") {
-      await this.doWriteContentUsingUpload(fullPath, content);
-    } else if (method === "uploadPart") {
-      if (typeof content === "string") {
-        const blob = new Blob([content]);
-        await this.doWriteContentUsingUploadPart(fullPath, blob);
-      } else {
-        await this.doWriteContentUsingUploadPart(fullPath, content);
-      }
-    } else {
-      await this.doWriteContentUsingPutObject(fullPath, content);
-    }
-  }
 
   private async doReadContentUsingGetObject(fullPath: string) {
     try {
       const key = this.getKey(fullPath);
       const data = await this.s3
-        .getObject({
-          Bucket: this.bucket,
-          Key: key,
-          ResponseCacheControl: "no-cache",
-        })
+        .getObject({ Bucket: this.bucket, Key: key })
         .promise();
-      const body = data.Body;
-      return this.fromBody(body);
+      return this.fromBody(data.Body);
     } catch (err) {
       if (err instanceof AbstractFileError) {
         throw err;
@@ -329,18 +320,49 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
+  private async doWriteContentToS3(
+    fullPath: string,
+    content: Blob | BufferSource
+  ) {
+    const method = this.s3Options.methodOfDoPutContent;
+
+    if (method === "xhr") {
+      if (this.hasBuffer) {
+        content = await toArrayBuffer(content);
+      } else {
+        content = toBlob(content);
+      }
+
+      await this.doWriteContentUsingXHR(fullPath, content);
+    } else if (method === "uploadPart") {
+      content = await toArrayBuffer(content);
+      await this.doWriteContentUsingUploadPart(fullPath, content);
+    } else {
+      if (this.hasBuffer) {
+        content = await toBuffer(content);
+      } else {
+        content = toBlob(content);
+      }
+
+      if (method === "upload") {
+        await this.doWriteContentUsingUpload(fullPath, content);
+      } else {
+        await this.doWriteContentUsingPutObject(fullPath, content);
+      }
+    }
+  }
+
   private async doWriteContentUsingPutObject(
     fullPath: string,
-    content: Blob | ArrayBuffer
+    content: Blob | BufferSource
   ) {
-    const body = await this.toBody(content);
     const key = this.getKey(fullPath);
     try {
       await this.s3
         .putObject({
           Bucket: this.bucket,
           Key: key,
-          Body: body,
+          Body: content,
         })
         .promise();
     } catch (err) {
@@ -353,27 +375,25 @@ export class S3Accessor extends AbstractAccessor {
 
   private async doWriteContentUsingUpload(
     fullPath: string,
-    content: Blob | ArrayBuffer
+    content: Blob | BufferSource
   ) {
-    const body = await this.toBody(content);
     const key = this.getKey(fullPath);
     await this.s3
       .upload({
         Bucket: this.bucket,
         Key: key,
-        Body: body,
+        Body: content,
       })
       .promise();
   }
 
   private async doWriteContentUsingUploadPart(
     fullPath: string,
-    content: Blob | ArrayBuffer
+    content: ArrayBuffer
   ) {
     const key = this.getKey(fullPath);
 
-    const buffer = await toArrayBuffer(content); // TODO
-    const view = new Uint8Array(buffer);
+    const view = new Uint8Array(content);
     const allSize = view.byteLength;
     const partSize = 1024 * 1024; // 1MB chunk
     const multipartMap: CompletedMultipartUpload = {
@@ -420,7 +440,7 @@ export class S3Accessor extends AbstractAccessor {
 
   private async doWriteContentUsingXHR(
     fullPath: string,
-    content: Blob | ArrayBuffer
+    content: Blob | BufferSource
   ) {
     try {
       const key = this.getKey(fullPath);
@@ -428,17 +448,13 @@ export class S3Accessor extends AbstractAccessor {
       const url = await this.s3.getSignedUrlPromise("putObject", {
         Bucket: this.bucket,
         Key: key,
-        Expires: 60 * 60 * 24 * 7,
+        Expires: EXPIRES,
       });
       const xhr = new XHR(this.name, fullPath, {
         timeout: config.httpOptions.timeout,
       });
-      if (content instanceof ArrayBuffer) {
-        const view = new Uint8Array(content);
-        await xhr.put(url, view);
-      } else {
-        await xhr.put(url, content);
-      }
+
+      await xhr.put(url, content);
     } catch (err) {
       if (err instanceof AbstractFileError) {
         throw err;
@@ -447,19 +463,29 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  private async fromBody(body: any) {
-    let content: Blob | ArrayBuffer;
-    if (typeof process === "object" && body instanceof Buffer) {
-      const view = new Uint8Array(body).buffer;
-      content = await toArrayBuffer(view);
-    } else if (body instanceof Uint8Array) {
-      content = await toArrayBuffer(body);
-    } else if (typeof body === "string") {
-      content = textToArrayBuffer(body);
-    } else {
-      content = body;
+  private async fromBody(body: S3.Body): Promise<BufferSource | Blob | string> {
+    if (typeof body === "string") {
+      return body;
     }
-    return content;
+    if (this.isReadable(body)) {
+      const readable: any = body;
+      return new Promise((resolve, reject) => {
+        const bufs: Buffer[] = [];
+        readable.on("data", (chunk: any) => {
+          bufs.push(chunk);
+        });
+        readable.on("end", () => {
+          resolve(Buffer.concat(bufs));
+        });
+        readable.on("error", (error: Error) => {
+          reject(error);
+        });
+      });
+    }
+    if (this.hasBuffer) {
+      return toBuffer(body as any);
+    }
+    return body as any;
   }
 
   private getKey(fullPath: string) {
@@ -468,19 +494,8 @@ export class S3Accessor extends AbstractAccessor {
     return key;
   }
 
-  private async toBody(content: Blob | ArrayBuffer) {
-    if (typeof content === "string") {
-      return content;
-    }
-    if (typeof process === "object") {
-      // Node
-      const buffer = await toArrayBuffer(content);
-      return Buffer.from(buffer);
-    } else {
-      // Web
-      const blob = toBlob(content);
-      return blob;
-    }
+  private isReadable(value: any) {
+    return typeof value.on === "function";
   }
 
   // #endregion Private Methods (11)
