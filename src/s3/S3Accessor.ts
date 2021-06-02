@@ -15,9 +15,11 @@ import {
   FileSystem,
   FileSystemObject,
   FileSystemOptions,
-  hasBuffer,
   INDEX_DIR,
   InvalidModificationError,
+  isBrowser,
+  isNode,
+  isReactNative,
   normalizePath,
   NotFoundError,
   NotReadableError,
@@ -154,7 +156,7 @@ export class S3Accessor extends AbstractAccessor {
     if (this.s3Options.methodOfDoGetContent === "xhr") {
       return await this.doReadContentUsingXHR(
         fullPath,
-        hasBuffer ? "arraybuffer" : "blob"
+        isBrowser ? "blob" : "arraybuffer"
       );
     } else {
       return await this.doReadContentUsingGetObject(fullPath);
@@ -317,22 +319,23 @@ export class S3Accessor extends AbstractAccessor {
   ) {
     const method = this.s3Options.methodOfDoPutContent;
 
-    if (method === "xhr") {
-      if (hasBuffer) {
-        content = await toArrayBuffer(content);
-      } else {
-        content = toBlob(content);
-      }
-
-      await this.doWriteContentUsingXHR(fullPath, content);
-    } else if (method === "uploadPart") {
+    if (method === "uploadPart") {
       content = await toArrayBuffer(content);
       await this.doWriteContentUsingUploadPart(fullPath, content);
-    } else {
-      if (hasBuffer) {
-        content = await toBuffer(content);
-      } else {
+    } else if (method === "xhr") {
+      if (isBrowser) {
         content = toBlob(content);
+      } else {
+        content = await toArrayBuffer(content);
+      }
+      await this.doWriteContentUsingXHR(fullPath, content);
+    } else {
+      if (isBrowser) {
+        content = toBlob(content);
+      } else if (isReactNative) {
+        content = await toArrayBuffer(content);
+      } else {
+        content = await toBuffer(content);
       }
 
       if (method === "upload") {
@@ -464,7 +467,7 @@ export class S3Accessor extends AbstractAccessor {
         });
       });
     }
-    if (hasBuffer) {
+    if (isNode) {
       return toBuffer(body as any);
     }
     return body as any;
