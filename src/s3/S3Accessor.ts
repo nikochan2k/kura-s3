@@ -330,12 +330,12 @@ export class S3Accessor extends AbstractAccessor {
       }
       await this.doWriteContentUsingXHR(fullPath, content);
     } else {
-      if (isBrowser) {
-        content = toBlob(content);
+      if (isNode) {
+        content = await toBuffer(content);
       } else if (isReactNative) {
         content = await toArrayBuffer(content);
       } else {
-        content = await toBuffer(content);
+        content = toBlob(content);
       }
 
       if (method === "upload") {
