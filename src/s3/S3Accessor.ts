@@ -236,8 +236,7 @@ export class S3Accessor extends AbstractAccessor {
       const data = await this.s3
         .getObject({ Bucket: this.bucket, Key: key })
         .promise();
-      const body = data.Body;
-      return this.fromBody(body);
+      return data.Body as Blob | BufferSource;
     } catch (err) {
       if (err instanceof AbstractFileError) {
         throw err;
