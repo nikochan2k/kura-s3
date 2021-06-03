@@ -315,41 +315,33 @@ export class S3Accessor extends AbstractAccessor {
 
   private async doWriteContentToS3(
     fullPath: string,
-    content: Blob | BufferSource
+    content: Blob | BufferSource | string
   ) {
     const method = this.s3Options.methodOfDoPutContent;
 
     if (method === "uploadPart") {
-      content = await toArrayBuffer(content);
       await this.doWriteContentUsingUploadPart(fullPath, content);
+    } else if (method === "xhr") {
+      await this.doWriteContentUsingXHR(fullPath, content);
+    } else if (method === "upload") {
+      await this.doWriteContentUsingUpload(fullPath, content);
     } else {
-      if (isReactNative || isNode) {
-        content = await toArrayBuffer(content);
-      } else {
-        content = toBlob(content);
-      }
-
-      if (method === "xhr") {
-        await this.doWriteContentUsingXHR(fullPath, content);
-      } else if (method === "upload") {
-        await this.doWriteContentUsingUpload(fullPath, content);
-      } else {
-        await this.doWriteContentUsingPutObject(fullPath, content);
-      }
+      await this.doWriteContentUsingPutObject(fullPath, content);
     }
   }
 
   private async doWriteContentUsingPutObject(
     fullPath: string,
-    content: Blob | BufferSource
+    content: Blob | BufferSource | string
   ) {
     const key = this.getKey(fullPath);
+    const body = await this.toBody(content);
     try {
       await this.s3
         .putObject({
           Bucket: this.bucket,
           Key: key,
-          Body: content,
+          Body: body,
         })
         .promise();
     } catch (err) {
@@ -362,25 +354,27 @@ export class S3Accessor extends AbstractAccessor {
 
   private async doWriteContentUsingUpload(
     fullPath: string,
-    content: Blob | BufferSource
+    content: Blob | BufferSource | string
   ) {
     const key = this.getKey(fullPath);
+    const body = await this.toBody(content);
     await this.s3
       .upload({
         Bucket: this.bucket,
         Key: key,
-        Body: content,
+        Body: body,
       })
       .promise();
   }
 
   private async doWriteContentUsingUploadPart(
     fullPath: string,
-    content: ArrayBuffer
+    content: Blob | BufferSource | string
   ) {
     const key = this.getKey(fullPath);
 
-    const view = new Uint8Array(content);
+    const buffer = await toArrayBuffer(content);
+    const view = new Uint8Array(buffer);
     const allSize = view.byteLength;
     const partSize = 1024 * 1024; // 1MB chunk
     const multipartMap: CompletedMultipartUpload = {
@@ -427,7 +421,7 @@ export class S3Accessor extends AbstractAccessor {
 
   private async doWriteContentUsingXHR(
     fullPath: string,
-    content: Blob | BufferSource
+    content: Blob | BufferSource | string
   ) {
     try {
       const url = await this.getSignedUrl(fullPath, "putObject");
@@ -473,8 +467,29 @@ export class S3Accessor extends AbstractAccessor {
     return url;
   }
 
-  private isReadable(value: any) {
-    return typeof value.on === "function";
+  private async toBody(content: Blob | BufferSource | string) {
+    if (typeof content === "string") {
+      return content;
+    }
+    if (isNode) {
+      const buffer = await toArrayBuffer(content);
+      if (buffer.byteLength === 0) {
+        return "";
+      }
+      return Buffer.from(buffer);
+    } else if (isReactNative) {
+      const buffer = await toArrayBuffer(content);
+      if (buffer.byteLength === 0) {
+        return "";
+      }
+      return buffer;
+    } else {
+      const blob = toBlob(content);
+      if (blob.size === 0) {
+        return "";
+      }
+      return blob;
+    }
   }
 
   // #endregion Private Methods (12)
