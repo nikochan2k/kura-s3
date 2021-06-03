@@ -28,6 +28,7 @@ import {
   isReactNative,
   isUint8Array,
   isBuffer,
+  hasBuffer,
 } from "kura";
 import { FileSystemOptions } from "kura/lib/FileSystemOptions";
 import { S3FileSystem } from "./S3FileSystem";
@@ -321,30 +322,23 @@ export class S3Accessor extends AbstractAccessor {
   ) {
     const method = this.s3Options.methodOfDoPutContent;
 
+    if (typeof content === "string") {
+      if (hasBuffer) {
+        content = await toBuffer(content);
+      } else {
+        content = toBlob(content);
+      }
+    }
+
     if (method === "uploadPart") {
       content = await toArrayBuffer(content);
       await this.doWriteContentUsingUploadPart(fullPath, content);
     } else if (method === "xhr") {
-      if (isBrowser) {
-        content = toBlob(content);
-      } else {
-        content = await toArrayBuffer(content);
-      }
       await this.doWriteContentUsingXHR(fullPath, content);
+    } else if (method === "upload") {
+      await this.doWriteContentUsingUpload(fullPath, content);
     } else {
-      if (isNode) {
-        content = await toBuffer(content);
-      } else if (isReactNative) {
-        content = await toArrayBuffer(content);
-      } else {
-        content = toBlob(content);
-      }
-
-      if (method === "upload") {
-        await this.doWriteContentUsingUpload(fullPath, content);
-      } else {
-        await this.doWriteContentUsingPutObject(fullPath, content);
-      }
+      await this.doWriteContentUsingPutObject(fullPath, content);
     }
   }
 
@@ -439,7 +433,7 @@ export class S3Accessor extends AbstractAccessor {
 
   private async doWriteContentUsingXHR(
     fullPath: string,
-    content: Blob | ArrayBuffer
+    content: Blob | BufferSource
   ) {
     try {
       const url = await this.getSignedUrl(fullPath, "putObject");
