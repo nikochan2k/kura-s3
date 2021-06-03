@@ -29,6 +29,7 @@ import { S3FileSystem } from "./S3FileSystem";
 import { S3FileSystemOptions } from "./S3FileSystemOption";
 import { getKey, getPrefix } from "./S3Util";
 
+const EXPIRES = 60 * 60 * 24 * 7;
 export class S3Accessor extends AbstractAccessor {
   // #region Properties (3)
 
@@ -109,11 +110,7 @@ export class S3Accessor extends AbstractAccessor {
         })
         .promise();
       const name = key.split(DIR_SEPARATOR).pop();
-      const url = await this.s3.getSignedUrlPromise("getObject", {
-        Bucket: this.bucket,
-        Key: key,
-        Expires: 60 * 60 * 24 * 7,
-      });
+      const url = await this.getSignedUrl(fullPath, "getObject");
       return {
         name,
         fullPath: fullPath,
@@ -149,6 +146,23 @@ export class S3Accessor extends AbstractAccessor {
 
   public async doMakeDirectory(obj: FileSystemObject) {
     // NOOP
+  }
+
+  public async getURL(fullPath: string): Promise<string> {
+    return this.getSignedUrl(fullPath, "getObject");
+  }
+
+  private async getSignedUrl(
+    fullPath: string,
+    operation: "getObject" | "putObject"
+  ) {
+    const key = this.getKey(fullPath);
+    const url = await this.s3.getSignedUrlPromise(operation, {
+      Bucket: this.bucket,
+      Key: key,
+      Expires: EXPIRES,
+    });
+    return url;
   }
 
   public async doReadContent(
@@ -423,13 +437,7 @@ export class S3Accessor extends AbstractAccessor {
     content: Blob | ArrayBuffer
   ) {
     try {
-      const key = this.getKey(fullPath);
-
-      const url = await this.s3.getSignedUrlPromise("putObject", {
-        Bucket: this.bucket,
-        Key: key,
-        Expires: 60 * 60 * 24 * 7,
-      });
+      const url = await this.getSignedUrl(fullPath, "putObject");
       const xhr = new XHR(this.name, fullPath, {
         timeout: config.httpOptions.timeout,
       });
