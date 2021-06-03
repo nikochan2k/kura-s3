@@ -14,21 +14,19 @@ import {
   DIR_SEPARATOR,
   FileSystem,
   FileSystemObject,
+  hasBuffer,
   INDEX_DIR,
   InvalidModificationError,
+  isBrowser,
+  isNode,
+  isReactNative,
   normalizePath,
   NotFoundError,
   NotReadableError,
   toArrayBuffer,
   toBlob,
-  XHR,
-  isBrowser,
-  isNode,
   toBuffer,
-  isReactNative,
-  isUint8Array,
-  isBuffer,
-  hasBuffer,
+  XHR,
 } from "kura";
 import { FileSystemOptions } from "kura/lib/FileSystemOptions";
 import { S3FileSystem } from "./S3FileSystem";
@@ -158,7 +156,7 @@ export class S3Accessor extends AbstractAccessor {
     if (this.s3Options.methodOfDoGetContent === "xhr") {
       return await this.doReadContentUsingXHR(
         fullPath,
-        isBrowser ? "blob" : "arraybuffer"
+        isBrowser() ? "blob" : "arraybuffer"
       );
     } else {
       return await this.doReadContentUsingGetObject(fullPath);
@@ -237,7 +235,7 @@ export class S3Accessor extends AbstractAccessor {
       const data = await this.s3
         .getObject({ Bucket: this.bucket, Key: key })
         .promise();
-      return data.Body as Blob | BufferSource;
+      return this.fromBody(data.Body);
     } catch (err) {
       if (err instanceof AbstractFileError) {
         throw err;
@@ -453,12 +451,11 @@ export class S3Accessor extends AbstractAccessor {
       throw new InvalidModificationError(this.name, fullPath, err);
     }
   }
-
   private async fromBody(body: any): Promise<BufferSource | Blob | string> {
-    if (isBrowser) {
-      return toBlob(body);
-    } else {
+    if (isReactNative()) {
       return toArrayBuffer(body);
+    } else {
+      return body;
     }
   }
 
@@ -485,9 +482,9 @@ export class S3Accessor extends AbstractAccessor {
     if (typeof content === "string") {
       return content;
     }
-    if (isNode) {
+    if (isNode()) {
       return toBuffer(content);
-    } else if (isReactNative) {
+    } else if (isReactNative()) {
       return toArrayBuffer(content);
     } else {
       return toBlob(content);
