@@ -17,6 +17,7 @@ import {
   FileSystemOptions,
   INDEX_DIR,
   InvalidModificationError,
+  isBlob,
   isBrowser,
   isNode,
   isReactNative,
@@ -25,7 +26,6 @@ import {
   NotReadableError,
   toArrayBuffer,
   toBlob,
-  toBuffer,
   XHR,
 } from "kura";
 import { S3FileSystem } from "./S3FileSystem";
@@ -322,23 +322,16 @@ export class S3Accessor extends AbstractAccessor {
     if (method === "uploadPart") {
       content = await toArrayBuffer(content);
       await this.doWriteContentUsingUploadPart(fullPath, content);
-    } else if (method === "xhr") {
-      if (isBrowser) {
-        content = toBlob(content);
-      } else {
-        content = await toArrayBuffer(content);
-      }
-      await this.doWriteContentUsingXHR(fullPath, content);
     } else {
-      if (isNode) {
-        content = await toBuffer(content);
-      } else if (isReactNative) {
+      if (isReactNative || isNode) {
         content = await toArrayBuffer(content);
       } else {
         content = toBlob(content);
       }
 
-      if (method === "upload") {
+      if (method === "xhr") {
+        await this.doWriteContentUsingXHR(fullPath, content);
+      } else if (method === "upload") {
         await this.doWriteContentUsingUpload(fullPath, content);
       } else {
         await this.doWriteContentUsingPutObject(fullPath, content);
@@ -448,29 +441,17 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  private async fromBody(body: S3.Body): Promise<BufferSource | Blob | string> {
-    if (typeof body === "string") {
-      return body;
+  private async fromBody(body: any) {
+    let content: Blob | ArrayBuffer;
+    if (typeof process === "object" && body instanceof Buffer) {
+      const view = new Uint8Array(body).buffer;
+      content = await toArrayBuffer(view);
+    } else if (isBlob(body)) {
+      content = body;
+    } else {
+      content = await toArrayBuffer(body);
     }
-    if (this.isReadable(body)) {
-      const readable: any = body;
-      return new Promise((resolve, reject) => {
-        const bufs: Buffer[] = [];
-        readable.on("data", (chunk: any) => {
-          bufs.push(chunk);
-        });
-        readable.on("end", () => {
-          resolve(Buffer.concat(bufs));
-        });
-        readable.on("error", (error: Error) => {
-          reject(error);
-        });
-      });
-    }
-    if (isNode) {
-      return toBuffer(body as any);
-    }
-    return body as any;
+    return content;
   }
 
   private getKey(fullPath: string) {
