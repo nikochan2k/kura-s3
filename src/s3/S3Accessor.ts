@@ -110,13 +110,11 @@ export class S3Accessor extends AbstractAccessor {
         })
         .promise();
       const name = key.split(DIR_SEPARATOR).pop();
-      const url = await this.getSignedUrl(fullPath, "getObject");
       return {
         name,
         fullPath: fullPath,
         lastModified: data.LastModified.getTime(),
         size: data.ContentLength,
-        url,
       };
     } catch (err) {
       if (err instanceof AbstractFileError) {
@@ -281,11 +279,11 @@ export class S3Accessor extends AbstractAccessor {
     responseType: XMLHttpRequestResponseType
   ) {
     try {
-      const obj = await this.doGetObject(fullPath);
       const xhr = new XHR(this.name, fullPath, {
         timeout: config.httpOptions.timeout,
       });
-      return xhr.get(obj.url, responseType);
+      const url = await this.getSignedUrl(fullPath, "getObject");
+      return xhr.get(url, responseType);
     } catch (err) {
       if (err instanceof AbstractFileError) {
         throw err;
