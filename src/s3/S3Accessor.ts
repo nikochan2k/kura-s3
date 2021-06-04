@@ -17,8 +17,9 @@ import {
   hasBuffer,
   INDEX_DIR,
   InvalidModificationError,
+  isBlob,
   isBrowser,
-  isNode,
+  isBuffer,
   isReactNative,
   normalizePath,
   NotFoundError,
@@ -482,13 +483,26 @@ export class S3Accessor extends AbstractAccessor {
     if (typeof content === "string") {
       return content;
     }
-    if (isNode()) {
-      return toBuffer(content);
-    } else if (isReactNative()) {
-      return toArrayBuffer(content);
-    } else {
-      return toBlob(content);
+
+    if (isBlob(content)) {
+      if (content.size === 0) {
+        return "";
+      }
+      return content;
     }
+
+    if (isBuffer(content)) {
+      if (content.length === 0) {
+        return "";
+      }
+      return content;
+    }
+
+    const ab = await toArrayBuffer(content);
+    if (ab.byteLength === 0) {
+      return "";
+    }
+    return content;
   }
 
   // #endregion Private Methods (12)
