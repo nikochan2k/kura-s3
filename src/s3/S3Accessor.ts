@@ -1,4 +1,4 @@
-import { AWSError, config } from "aws-sdk";
+import { AWSError } from "aws-sdk";
 import S3, {
   ClientConfiguration,
   CompletedMultipartUpload,
@@ -52,14 +52,13 @@ export class S3Accessor extends AbstractAccessor {
   public filesystem: FileSystem;
   public name: string;
   public s3: S3;
-  private lastPutObject: FileSystemObject;
 
   // #endregion Properties (3)
 
   // #region Constructors (1)
 
   constructor(
-    config: ClientConfiguration,
+    private config: ClientConfiguration,
     private bucket: string,
     private rootDir: string,
     private s3Options?: S3FileSystemOptions
@@ -256,7 +255,7 @@ export class S3Accessor extends AbstractAccessor {
     responseType: XMLHttpRequestResponseType
   ) {
     const xhr = new XHR(this.name, fullPath, {
-      timeout: config.httpOptions.timeout,
+      timeout: this.config.httpOptions.timeout,
     });
     const url = await this.getSignedUrl(fullPath, "getObject");
     return xhr.get(url, responseType);
@@ -424,7 +423,7 @@ export class S3Accessor extends AbstractAccessor {
     try {
       const url = await this.getSignedUrl(fullPath, "putObject");
       const xhr = new XHR(this.name, fullPath, {
-        timeout: config.httpOptions.timeout,
+        timeout: this.config.httpOptions.timeout,
       });
       if (isBlob(content) || ArrayBuffer.isView(content)) {
         await xhr.put(url, content);
@@ -468,7 +467,7 @@ export class S3Accessor extends AbstractAccessor {
       return content;
     }
 
-    if (isNode) {
+    if (hasBuffer) {
       content = await toBuffer(content);
       if (content.byteLength === 0) {
         return "";
@@ -476,8 +475,16 @@ export class S3Accessor extends AbstractAccessor {
       return content;
     }
 
-    content = toBlob(content);
-    if (content.size === 0) {
+    if (isBrowser) {
+      content = toBlob(content);
+      if (content.size === 0) {
+        return "";
+      }
+      return content;
+    }
+
+    const ab = await toArrayBuffer(content);
+    if (ab.byteLength === 0) {
       return "";
     }
     return content;
