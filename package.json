@@ -65,6 +65,6 @@
   },
   "peerDependencies": {
     "aws-sdk": "^2.903.0",
-    "kura": "^0.3.44"
+    "kura": "^0.3.52"
   }
 }
