@@ -14,13 +14,10 @@ import {
   DIR_SEPARATOR,
   FileSystem,
   FileSystemObject,
-  hasBuffer,
   INDEX_DIR,
   InvalidModificationError,
   isBlob,
-  isBrowser,
   isBuffer,
-  isReactNative,
   normalizePath,
   NotFoundError,
   NotReadableError,
@@ -35,6 +32,22 @@ import { S3FileSystemOptions } from "./S3FileSystemOption";
 import { getKey, getPrefix } from "./S3Util";
 
 const EXPIRES = 60 * 60 * 24 * 7;
+
+const isBrowser =
+  typeof window !== "undefined" && typeof window.document !== "undefined";
+
+const isNode =
+  typeof process !== "undefined" &&
+  process.versions != null &&
+  process.versions.node != null;
+
+const isReactNative =
+  typeof navigator !== "undefined" && navigator.product === "ReactNative";
+
+const hasBuffer = typeof Buffer === "function";
+
+const hasBlob = typeof Blob === "function";
+
 export class S3Accessor extends AbstractAccessor {
   // #region Properties (3)
 
@@ -157,7 +170,7 @@ export class S3Accessor extends AbstractAccessor {
     if (this.s3Options.methodOfDoGetContent === "xhr") {
       return await this.doReadContentUsingXHR(
         fullPath,
-        isBrowser() ? "blob" : "arraybuffer"
+        isBrowser ? "blob" : "arraybuffer"
       );
     } else {
       return await this.doReadContentUsingGetObject(fullPath);
@@ -453,7 +466,7 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
   private async fromBody(body: any): Promise<BufferSource | Blob | string> {
-    if (isReactNative()) {
+    if (isReactNative) {
       return toArrayBuffer(body);
     } else {
       return body;
