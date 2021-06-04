@@ -106,7 +106,9 @@ export class S3Accessor extends AbstractAccessor {
     try {
       await this.s3.deleteObject(params).promise();
     } catch (err) {
-      this.isNotFoundError(fullPath, err);
+      if (this.isNotFoundError(err)) {
+        return;
+      }
       throw new InvalidModificationError(this.name, fullPath, err);
     }
   }
@@ -128,7 +130,7 @@ export class S3Accessor extends AbstractAccessor {
         size: data.ContentLength,
       };
     } catch (err) {
-      this.isNotFoundError(fullPath, err);
+      this.handleNotFoundError(fullPath, err);
       throw new NotReadableError(this.name, fullPath, err);
     }
   }
@@ -177,6 +179,10 @@ export class S3Accessor extends AbstractAccessor {
     fullPath: string,
     buffer: ArrayBuffer
   ): Promise<void> {
+    if (buffer.byteLength === 0) {
+      this.doDelete(fullPath, true);
+      return;
+    }
     return this.doWriteContentToS3(fullPath, buffer);
   }
 
@@ -184,10 +190,18 @@ export class S3Accessor extends AbstractAccessor {
     fullPath: string,
     base64: string
   ): Promise<void> {
+    if (base64.length === 0) {
+      this.doDelete(fullPath, true);
+      return;
+    }
     return this.doWriteContentToS3(fullPath, base64);
   }
 
   protected doWriteBlob(fullPath: string, blob: Blob): Promise<void> {
+    if (blob.size === 0) {
+      this.doDelete(fullPath, true);
+      return;
+    }
     return this.doWriteContentToS3(fullPath, blob);
   }
 
@@ -195,6 +209,10 @@ export class S3Accessor extends AbstractAccessor {
     fullPath: string,
     buffer: Buffer
   ): Promise<void> {
+    if (buffer.byteLength === 0) {
+      this.doDelete(fullPath, true);
+      return;
+    }
     return this.doWriteContentToS3(fullPath, buffer);
   }
 
@@ -229,7 +247,7 @@ export class S3Accessor extends AbstractAccessor {
 
   // #endregion Protected Methods (6)
 
-  // #region Private Methods (13)
+  // #region Private Methods (14)
 
   private async doReadContentUsingGetObject(fullPath: string) {
     try {
@@ -239,7 +257,7 @@ export class S3Accessor extends AbstractAccessor {
         .promise();
       return this.fromBody(data.Body);
     } catch (err) {
-      this.isNotFoundError(fullPath, err);
+      this.handleNotFoundError(fullPath, err);
       throw new NotReadableError(this.name, fullPath, err);
     }
   }
@@ -457,11 +475,22 @@ export class S3Accessor extends AbstractAccessor {
     return url;
   }
 
-  private isNotFoundError(fullPath: string, err: any) {
-    const awsError: AWSError = err;
-    if (awsError.statusCode === 404 || awsError.code === "XMLParserError") {
+  private handleNotFoundError(fullPath: string, err: any) {
+    if (this.isNotFoundError(err)) {
       throw new NotFoundError(this.name, fullPath, err);
     }
+  }
+
+  private isNotFoundError(err: any) {
+    if (!err) {
+      return false;
+    }
+
+    const awsError: AWSError = err;
+    if (awsError.statusCode === 404 || awsError.code === "XMLParserError") {
+      return true;
+    }
+    return false;
   }
 
   private async toBody(content: Blob | BufferSource) {
@@ -492,5 +521,5 @@ export class S3Accessor extends AbstractAccessor {
     return content;
   }
 
-  // #endregion Private Methods (13)
+  // #endregion Private Methods (14)
 }
