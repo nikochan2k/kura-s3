@@ -471,7 +471,7 @@ export class S3Accessor extends AbstractAccessor {
     }
 
     const awsError: AWSError = err;
-    if (awsError.statusCode === 404 || awsError.code === "XMLParserError") {
+    if (awsError.statusCode === 404) {
       return true;
     }
     return false;
