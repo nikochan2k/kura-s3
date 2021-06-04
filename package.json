@@ -1,6 +1,6 @@
 {
   "name": "kura-s3",
-  "version": "0.3.25",
+  "version": "0.3.26",
   "description": "The FileSystem API abstraction library, AWS S3 Plugin",
   "author": "Yoshihiro Seki",
   "license": "MIT",
