@@ -120,29 +120,37 @@ export class S3Accessor extends AbstractAccessor {
   public async doGetObject(fullPath: string): Promise<FileSystemObject> {
     const key = this.getKey(fullPath);
     return new Promise<FileSystemObject>((resolve, reject) => {
-      this.s3
-        .headObject({
-          Bucket: this.bucket,
-          Key: key,
-        })
-        .send((err, data) => {
-          if (err) {
-            if (err.statusCode === 404) {
-              reject(new NotFoundError(this.name, fullPath, err));
+      const logic = () =>
+        this.s3
+          .headObject({
+            Bucket: this.bucket,
+            Key: key,
+          })
+          .send((err, data) => {
+            if (err) {
+              if (err.code === "XMLParserError") {
+                console.warn(err);
+                setTimeout(() => logic(), 10);
+                return;
+              }
+              if (err.statusCode === 404) {
+                reject(new NotFoundError(this.name, fullPath, err));
+                return;
+              }
+              reject(new NotReadableError(this.name, fullPath, err));
               return;
             }
-            reject(new NotReadableError(this.name, fullPath, err));
-            return;
-          }
 
-          const name = key.split(DIR_SEPARATOR).pop();
-          resolve({
-            name,
-            fullPath: fullPath,
-            lastModified: data.LastModified.getTime(),
-            size: data.ContentLength,
+            const name = key.split(DIR_SEPARATOR).pop();
+            resolve({
+              name,
+              fullPath: fullPath,
+              lastModified: data.LastModified.getTime(),
+              size: data.ContentLength,
+            });
           });
-        });
+
+      logic();
     });
   }
 
