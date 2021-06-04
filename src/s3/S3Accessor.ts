@@ -69,8 +69,8 @@ export class S3Accessor extends AbstractAccessor {
     }
     config.maxRetries = 0;
     if (config.httpOptions.timeout == null) {
-      config.httpOptions.timeout = 2000;
-      config.httpOptions.connectTimeout = 2000;
+      config.httpOptions.timeout = 1000;
+      config.httpOptions.connectTimeout = 1000;
     }
     config.signatureVersion = "v4";
     this.s3 = new S3(config);
@@ -106,9 +106,7 @@ export class S3Accessor extends AbstractAccessor {
     try {
       await this.s3.deleteObject(params).promise();
     } catch (err) {
-      if ((err as AWSError).statusCode === 404) {
-        throw new NotFoundError(this.name, fullPath, err);
-      }
+      this.isNotFoundError(fullPath, err);
       throw new InvalidModificationError(this.name, fullPath, err);
     }
   }
@@ -130,9 +128,7 @@ export class S3Accessor extends AbstractAccessor {
         size: data.ContentLength,
       };
     } catch (err) {
-      if ((err as AWSError).statusCode === 404) {
-        throw new NotFoundError(this.name, fullPath, err);
-      }
+      this.isNotFoundError(fullPath, err);
       throw new NotReadableError(this.name, fullPath, err);
     }
   }
@@ -233,7 +229,7 @@ export class S3Accessor extends AbstractAccessor {
 
   // #endregion Protected Methods (6)
 
-  // #region Private Methods (12)
+  // #region Private Methods (13)
 
   private async doReadContentUsingGetObject(fullPath: string) {
     try {
@@ -243,9 +239,7 @@ export class S3Accessor extends AbstractAccessor {
         .promise();
       return this.fromBody(data.Body);
     } catch (err) {
-      if ((err as AWSError).statusCode === 404) {
-        throw new NotFoundError(this.name, fullPath, err);
-      }
+      this.isNotFoundError(fullPath, err);
       throw new NotReadableError(this.name, fullPath, err);
     }
   }
@@ -435,6 +429,7 @@ export class S3Accessor extends AbstractAccessor {
       throw new InvalidModificationError(this.name, fullPath, err);
     }
   }
+
   private async fromBody(body: any): Promise<BufferSource | Blob | string> {
     if (isReactNative) {
       return toArrayBuffer(body);
@@ -460,6 +455,13 @@ export class S3Accessor extends AbstractAccessor {
       Expires: EXPIRES,
     });
     return url;
+  }
+
+  private isNotFoundError(fullPath: string, err: any) {
+    const awsError: AWSError = err;
+    if (awsError.statusCode === 404 || awsError.code === "XMLParserError") {
+      throw new NotFoundError(this.name, fullPath, err);
+    }
   }
 
   private async toBody(content: Blob | BufferSource) {
@@ -490,5 +492,5 @@ export class S3Accessor extends AbstractAccessor {
     return content;
   }
 
-  // #endregion Private Methods (12)
+  // #endregion Private Methods (13)
 }
