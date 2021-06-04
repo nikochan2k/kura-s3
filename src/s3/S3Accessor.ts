@@ -468,7 +468,7 @@ export class S3Accessor extends AbstractAccessor {
       return content;
     }
 
-    if (hasBuffer) {
+    if (isNode) {
       content = await toBuffer(content);
       if (content.byteLength === 0) {
         return "";
@@ -476,16 +476,8 @@ export class S3Accessor extends AbstractAccessor {
       return content;
     }
 
-    if (isBrowser) {
-      content = toBlob(content);
-      if (content.size === 0) {
-        return "";
-      }
-      return content;
-    }
-
-    const ab = await toArrayBuffer(content);
-    if (ab.byteLength === 0) {
+    content = toBlob(content);
+    if (content.size === 0) {
       return "";
     }
     return content;
