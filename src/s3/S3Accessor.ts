@@ -179,10 +179,6 @@ export class S3Accessor extends AbstractAccessor {
     fullPath: string,
     buffer: ArrayBuffer
   ): Promise<void> {
-    if (buffer.byteLength === 0) {
-      this.doDelete(fullPath, true);
-      return;
-    }
     return this.doWriteContentToS3(fullPath, buffer);
   }
 
@@ -190,18 +186,10 @@ export class S3Accessor extends AbstractAccessor {
     fullPath: string,
     base64: string
   ): Promise<void> {
-    if (base64.length === 0) {
-      this.doDelete(fullPath, true);
-      return;
-    }
     return this.doWriteContentToS3(fullPath, base64);
   }
 
   protected doWriteBlob(fullPath: string, blob: Blob): Promise<void> {
-    if (blob.size === 0) {
-      this.doDelete(fullPath, true);
-      return;
-    }
     return this.doWriteContentToS3(fullPath, blob);
   }
 
@@ -209,10 +197,6 @@ export class S3Accessor extends AbstractAccessor {
     fullPath: string,
     buffer: Buffer
   ): Promise<void> {
-    if (buffer.byteLength === 0) {
-      this.doDelete(fullPath, true);
-      return;
-    }
     return this.doWriteContentToS3(fullPath, buffer);
   }
 
@@ -247,7 +231,7 @@ export class S3Accessor extends AbstractAccessor {
 
   // #endregion Protected Methods (6)
 
-  // #region Private Methods (14)
+  // #region Private Methods (13)
 
   private async doReadContentUsingGetObject(fullPath: string) {
     try {
@@ -494,32 +478,16 @@ export class S3Accessor extends AbstractAccessor {
   }
 
   private async toBody(content: Blob | BufferSource) {
-    if (typeof content === "string") {
-      return content;
-    }
-
     if (hasBuffer) {
-      content = await toBuffer(content);
-      if (content.byteLength === 0) {
-        return "";
-      }
-      return content;
+      return toBuffer(content);
     }
 
     if (isBrowser) {
-      content = toBlob(content);
-      if (content.size === 0) {
-        return "";
-      }
-      return content;
+      return toBlob(content);
     }
 
-    const ab = await toArrayBuffer(content);
-    if (ab.byteLength === 0) {
-      return "";
-    }
-    return content;
+    return toArrayBuffer(content);
   }
 
-  // #endregion Private Methods (14)
+  // #endregion Private Methods (13)
 }
