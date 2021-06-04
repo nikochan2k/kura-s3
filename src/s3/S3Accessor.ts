@@ -1,13 +1,11 @@
 import { AWSError, config } from "aws-sdk";
-import { ClientConfiguration } from "aws-sdk/clients/acm";
-import { PutObjectResponse } from "aws-sdk/clients/mediastoredata";
 import S3, {
+  ClientConfiguration,
   CompletedMultipartUpload,
   CompleteMultipartUploadRequest,
   CreateMultipartUploadRequest,
   DeleteObjectRequest,
   ListObjectsV2Request,
-  PutObjectOutput,
   UploadPartRequest,
 } from "aws-sdk/clients/s3";
 import {
@@ -16,7 +14,6 @@ import {
   DIR_SEPARATOR,
   FileSystem,
   FileSystemObject,
-  getName,
   INDEX_DIR,
   InvalidModificationError,
   normalizePath,
@@ -122,30 +119,31 @@ export class S3Accessor extends AbstractAccessor {
 
   public async doGetObject(fullPath: string): Promise<FileSystemObject> {
     const key = this.getKey(fullPath);
-    try {
-      const data = await this.s3
+    return new Promise<FileSystemObject>((resolve, reject) => {
+      this.s3
         .headObject({
           Bucket: this.bucket,
           Key: key,
         })
-        .promise();
-      const name = key.split(DIR_SEPARATOR).pop();
-      return {
-        name,
-        fullPath: fullPath,
-        lastModified: data.LastModified.getTime(),
-        size: data.ContentLength,
-      };
-    } catch (err) {
-      if (err instanceof AbstractFileError) {
-        throw err;
-      }
-      const awsError = err as AWSError;
-      if (awsError.statusCode === 404) {
-        throw new NotFoundError(this.name, fullPath, err);
-      }
-      throw new NotReadableError(this.name, fullPath, err);
-    }
+        .send((err, data) => {
+          if (err) {
+            if (err.statusCode === 404) {
+              reject(new NotFoundError(this.name, fullPath, err));
+              return;
+            }
+            reject(new NotReadableError(this.name, fullPath, err));
+            return;
+          }
+
+          const name = key.split(DIR_SEPARATOR).pop();
+          resolve({
+            name,
+            fullPath: fullPath,
+            lastModified: data.LastModified.getTime(),
+            size: data.ContentLength,
+          });
+        });
+    });
   }
 
   public async doGetObjects(dirPath: string) {
@@ -371,7 +369,6 @@ export class S3Accessor extends AbstractAccessor {
           Body: body,
         })
         .promise();
-      console.log(data);
     } catch (err) {
       if (err instanceof AbstractFileError) {
         throw err;
