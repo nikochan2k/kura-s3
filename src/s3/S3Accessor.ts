@@ -1,11 +1,13 @@
 import { AWSError, config } from "aws-sdk";
 import { ClientConfiguration } from "aws-sdk/clients/acm";
+import { PutObjectResponse } from "aws-sdk/clients/mediastoredata";
 import S3, {
   CompletedMultipartUpload,
   CompleteMultipartUploadRequest,
   CreateMultipartUploadRequest,
   DeleteObjectRequest,
   ListObjectsV2Request,
+  PutObjectOutput,
   UploadPartRequest,
 } from "aws-sdk/clients/s3";
 import {
@@ -14,10 +16,9 @@ import {
   DIR_SEPARATOR,
   FileSystem,
   FileSystemObject,
+  getName,
   INDEX_DIR,
   InvalidModificationError,
-  isBlob,
-  isBuffer,
   normalizePath,
   NotFoundError,
   NotReadableError,
@@ -54,6 +55,7 @@ export class S3Accessor extends AbstractAccessor {
   public filesystem: FileSystem;
   public name: string;
   public s3: S3;
+  private lastPutObject: FileSystemObject;
 
   // #endregion Properties (3)
 
@@ -141,8 +143,6 @@ export class S3Accessor extends AbstractAccessor {
       const awsError = err as AWSError;
       if (awsError.statusCode === 404) {
         throw new NotFoundError(this.name, fullPath, err);
-      } else if (awsError.code === "XMLParserError") {
-        throw new NotFoundError(this.name, fullPath, awsError);
       }
       throw new NotReadableError(this.name, fullPath, err);
     }
@@ -364,13 +364,14 @@ export class S3Accessor extends AbstractAccessor {
     const body = await this.toBody(content);
     const key = this.getKey(fullPath);
     try {
-      await this.s3
+      const data = await this.s3
         .putObject({
           Bucket: this.bucket,
           Key: key,
           Body: body,
         })
         .promise();
+      console.log(data);
     } catch (err) {
       if (err instanceof AbstractFileError) {
         throw err;
