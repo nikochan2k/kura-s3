@@ -497,15 +497,17 @@ export class S3Accessor extends AbstractAccessor {
       return content;
     }
 
-    if (isBlob(content)) {
-      if (content.size === 0) {
+    if (hasBuffer) {
+      content = await toBuffer(content);
+      if (content.byteLength === 0) {
         return "";
       }
       return content;
     }
 
-    if (isBuffer(content)) {
-      if (content.length === 0) {
+    if (isBrowser) {
+      content = toBlob(content);
+      if (content.size === 0) {
         return "";
       }
       return content;
