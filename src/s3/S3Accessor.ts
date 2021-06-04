@@ -138,8 +138,11 @@ export class S3Accessor extends AbstractAccessor {
       if (err instanceof AbstractFileError) {
         throw err;
       }
-      if ((err as AWSError).statusCode === 404) {
+      const awsError = err as AWSError;
+      if (awsError.statusCode === 404) {
         throw new NotFoundError(this.name, fullPath, err);
+      } else if (awsError.code === "XMLParserError") {
+        throw new NotFoundError(this.name, fullPath, awsError);
       }
       throw new NotReadableError(this.name, fullPath, err);
     }
@@ -254,8 +257,11 @@ export class S3Accessor extends AbstractAccessor {
       if (err instanceof AbstractFileError) {
         throw err;
       }
-      if ((err as AWSError).statusCode === 404) {
+      const awsError = err as AWSError;
+      if (awsError.statusCode === 404) {
         throw new NotFoundError(this.name, fullPath, err);
+      } else if (awsError.code === "XMLParserError") {
+        throw new NotFoundError(this.name, fullPath, awsError);
       }
       throw new NotReadableError(this.name, fullPath, err);
     }
@@ -274,9 +280,6 @@ export class S3Accessor extends AbstractAccessor {
     } catch (err) {
       if (err instanceof AbstractFileError) {
         throw err;
-      }
-      if ((err as AWSError).statusCode === 404) {
-        throw new NotFoundError(this.name, fullPath, err);
       }
       throw new NotReadableError(this.name, fullPath, err);
     }
