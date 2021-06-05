@@ -10,6 +10,7 @@ import S3, {
 } from "aws-sdk/clients/s3";
 import {
   AbstractAccessor,
+  DEFAULT_CONTENT_TYPE,
   DIR_SEPARATOR,
   FileSystem,
   FileSystemObject,
@@ -362,12 +363,18 @@ export class S3Accessor extends AbstractAccessor {
   ) {
     const body = await this.toBody(content);
     const key = this.getKey(fullPath);
+    const contentType = isBlob(content)
+      ? content.type || DEFAULT_CONTENT_TYPE
+      : DEFAULT_CONTENT_TYPE;
+    const contentLength = isBlob(content) ? content.size : content.byteLength;
     try {
       const data = await this.s3
         .putObject({
           Bucket: this.bucket,
           Key: key,
           Body: body,
+          ContentType: contentType,
+          ContentLength: contentLength,
         })
         .promise();
     } catch (err) {
@@ -381,11 +388,17 @@ export class S3Accessor extends AbstractAccessor {
   ) {
     const body = await this.toBody(content);
     const key = this.getKey(fullPath);
+    const contentType = isBlob(content)
+      ? content.type || DEFAULT_CONTENT_TYPE
+      : DEFAULT_CONTENT_TYPE;
+    const contentLength = isBlob(content) ? content.size : content.byteLength;
     await this.s3
       .upload({
         Bucket: this.bucket,
         Key: key,
         Body: body,
+        ContentType: contentType,
+        ContentLength: contentLength,
       })
       .promise();
   }
