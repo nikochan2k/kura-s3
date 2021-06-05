@@ -10,7 +10,6 @@ import S3, {
 } from "aws-sdk/clients/s3";
 import {
   AbstractAccessor,
-  DEFAULT_CONTENT_TYPE,
   DIR_SEPARATOR,
   FileSystem,
   FileSystemObject,
@@ -69,7 +68,6 @@ export class S3Accessor extends AbstractAccessor {
     if (!config.httpOptions) {
       config.httpOptions = {};
     }
-    config.convertResponseTypes = false;
     config.maxRetries = 0;
     if (config.httpOptions.timeout == null) {
       config.httpOptions.timeout = 1000;
@@ -262,7 +260,7 @@ export class S3Accessor extends AbstractAccessor {
 
   // #endregion Protected Methods (6)
 
-  // #region Private Methods (13)
+  // #region Private Methods (14)
 
   private async doReadContentUsingGetObject(fullPath: string) {
     try {
@@ -363,9 +361,6 @@ export class S3Accessor extends AbstractAccessor {
   ) {
     const body = await this.toBody(content);
     const key = this.getKey(fullPath);
-    const contentType = isBlob(content)
-      ? content.type || DEFAULT_CONTENT_TYPE
-      : DEFAULT_CONTENT_TYPE;
     const contentLength = isBlob(content) ? content.size : content.byteLength;
     try {
       const data = await this.s3
@@ -373,7 +368,6 @@ export class S3Accessor extends AbstractAccessor {
           Bucket: this.bucket,
           Key: key,
           Body: body,
-          ContentType: contentType,
           ContentLength: contentLength,
         })
         .promise();
@@ -388,16 +382,12 @@ export class S3Accessor extends AbstractAccessor {
   ) {
     const body = await this.toBody(content);
     const key = this.getKey(fullPath);
-    const contentType = isBlob(content)
-      ? content.type || DEFAULT_CONTENT_TYPE
-      : DEFAULT_CONTENT_TYPE;
     const contentLength = isBlob(content) ? content.size : content.byteLength;
     await this.s3
       .upload({
         Bucket: this.bucket,
         Key: key,
         Body: body,
-        ContentType: contentType,
         ContentLength: contentLength,
       })
       .promise();
@@ -536,5 +526,5 @@ export class S3Accessor extends AbstractAccessor {
     return toBlob(content);
   }
 
-  // #endregion Private Methods (13)
+  // #endregion Private Methods (14)
 }
