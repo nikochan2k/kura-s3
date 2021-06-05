@@ -129,6 +129,9 @@ export class S3Accessor extends AbstractAccessor {
       }
       throw new NotReadableError(this.name, fullPath, err);
     }
+    if (data.KeyCount === 0) {
+      throw new NotFoundError(this.name, fullPath);
+    }
     for (const content of data.Contents) {
       if (content.Key === key) {
         return {
