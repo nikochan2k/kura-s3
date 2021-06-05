@@ -67,6 +67,7 @@ export class S3Accessor extends AbstractAccessor {
     if (!config.httpOptions) {
       config.httpOptions = {};
     }
+    config.convertResponseTypes = false;
     config.maxRetries = 0;
     if (config.httpOptions.timeout == null) {
       config.httpOptions.timeout = 1000;
