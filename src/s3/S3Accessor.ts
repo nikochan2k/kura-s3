@@ -13,6 +13,7 @@ import {
   DIR_SEPARATOR,
   FileSystem,
   FileSystemObject,
+  getName,
   INDEX_DIR,
   InvalidModificationError,
   isBlob,
@@ -116,6 +117,30 @@ export class S3Accessor extends AbstractAccessor {
 
   public async doGetObject(fullPath: string): Promise<FileSystemObject> {
     const key = this.getKey(fullPath);
+    const params: ListObjectsV2Request = {
+      Bucket: this.bucket,
+      Prefix: key,
+    };
+    try {
+      var data = await this.s3.listObjectsV2(params).promise();
+    } catch (err) {
+      if ((err as AWSError).statusCode === 404) {
+        throw new NotFoundError(this.name, fullPath, err);
+      }
+      throw new NotReadableError(this.name, fullPath, err);
+    }
+    for (const content of data.Contents) {
+      if (content.Key === key) {
+        return {
+          name: getName(fullPath),
+          fullPath: fullPath,
+          lastModified: content.LastModified.getTime(),
+          size: content.Size,
+        };
+      }
+    }
+    throw new NotFoundError(this.name, fullPath);
+    /*
     try {
       const data = await this.s3
         .headObject({
@@ -134,6 +159,7 @@ export class S3Accessor extends AbstractAccessor {
       this.handleNotFoundError(fullPath, err);
       throw new NotReadableError(this.name, fullPath, err);
     }
+    */
   }
 
   public async doGetObjects(dirPath: string) {
