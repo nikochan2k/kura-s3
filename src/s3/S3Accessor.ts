@@ -478,15 +478,19 @@ export class S3Accessor extends AbstractAccessor {
   }
 
   private async toBody(content: Blob | BufferSource) {
-    if (hasBuffer) {
+    if (isNode) {
       return toBuffer(content);
     }
 
-    if (isBrowser) {
-      return toBlob(content);
+    if (isReactNative) {
+      if (hasBuffer) {
+        return toBuffer(content);
+      } else {
+        return toArrayBuffer(content);
+      }
     }
 
-    return toArrayBuffer(content);
+    return toBlob(content);
   }
 
   // #endregion Private Methods (13)
