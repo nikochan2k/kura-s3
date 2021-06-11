@@ -4,6 +4,7 @@ import { XHROptions } from "kura";
 export interface S3FileSystemOptions extends FileSystemOptions {
   // #region Properties (3)
 
+  noCache?: boolean;
   methodOfDoGetContent?: "xhr" | "getObject";
   methodOfDoPutContent?: "xhr" | "upload" | "uploadPart" | "putObject";
   xhrOptions?: XHROptions;

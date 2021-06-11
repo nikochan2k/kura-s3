@@ -5,6 +5,7 @@ import S3, {
   CompleteMultipartUploadRequest,
   CreateMultipartUploadRequest,
   DeleteObjectRequest,
+  GetObjectRequest,
   ListObjectsV2Request,
   UploadPartRequest,
 } from "aws-sdk/clients/s3";
@@ -24,6 +25,7 @@ import {
   toBlob,
   toBuffer,
   XHR,
+  XHROptions,
 } from "kura";
 import { FileSystemOptions } from "kura/lib/FileSystemOptions";
 import { S3FileSystem } from "./S3FileSystem";
@@ -265,9 +267,15 @@ export class S3Accessor extends AbstractAccessor {
   private async doReadContentUsingGetObject(fullPath: string) {
     try {
       const key = this.getKey(fullPath);
-      const data = await this.s3
-        .getObject({ Bucket: this.bucket, Key: key })
-        .promise();
+      const req: GetObjectRequest = {
+        Bucket: this.bucket,
+        Key: key,
+      };
+      if (this.s3Options.noCache) {
+        req.ResponseCacheControl = "no-cache";
+        req.ResponseExpires = new Date(0);
+      }
+      const data = await this.s3.getObject(req).promise();
       return this.fromBody(data.Body);
     } catch (err) {
       this.handleNotFoundError(fullPath, err);
@@ -279,9 +287,13 @@ export class S3Accessor extends AbstractAccessor {
     fullPath: string,
     responseType: XMLHttpRequestResponseType
   ) {
-    const xhr = new XHR(this.name, fullPath, {
+    const xhrOptions: XHROptions = {
       timeout: this.config.httpOptions.timeout,
-    });
+    };
+    if (this.s3Options.noCache) {
+      xhrOptions.requestHeaders["Cache-Control"] = "no-cache";
+    }
+    const xhr = new XHR(this.name, fullPath, xhrOptions);
     const url = await this.getSignedUrl(fullPath, "getObject");
     return xhr.get(url, responseType);
   }
