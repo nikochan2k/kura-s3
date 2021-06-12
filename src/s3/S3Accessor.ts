@@ -1,5 +1,5 @@
 import { AWSError } from "aws-sdk";
-import S3, {
+import {
   ClientConfiguration,
   CompletedMultipartUpload,
   CompleteMultipartUploadRequest,
@@ -49,12 +49,18 @@ const hasBuffer = typeof Buffer === "function";
 
 const hasBlob = typeof Blob === "function";
 
+let AWS: any;
+if (isReactNative) {
+  AWS = require("aws-sdk/dist/aws-sdk-react-native");
+} else {
+  AWS = require("aws-sdk");
+}
 export class S3Accessor extends AbstractAccessor {
   // #region Properties (3)
 
   public filesystem: FileSystem;
   public name: string;
-  public s3: S3;
+  public s3: any;
 
   // #endregion Properties (3)
 
@@ -76,7 +82,7 @@ export class S3Accessor extends AbstractAccessor {
       config.httpOptions.connectTimeout = 1000;
     }
     config.signatureVersion = "v4";
-    this.s3 = new S3(config);
+    this.s3 = new AWS.S3(config);
     this.filesystem = new S3FileSystem(this);
     if (!this.rootDir.startsWith(DIR_SEPARATOR)) {
       this.rootDir = DIR_SEPARATOR + this.rootDir;
