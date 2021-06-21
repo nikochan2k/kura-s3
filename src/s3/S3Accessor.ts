@@ -198,8 +198,17 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  public async getURL(fullPath: string): Promise<string> {
-    return this.getSignedUrl(fullPath, "getObject");
+  public async getURL(
+    fullPath: string,
+    method?: "GET" | "POST" | "PUT" | "DELETE"
+  ): Promise<string> {
+    if (!method || method === "GET") {
+      return this.getSignedUrl(fullPath, "getObject");
+    } else if (method === "POST" || method === "PUT") {
+      return this.getSignedUrl(fullPath, "putObject");
+    } else {
+      return null;
+    }
   }
 
   // #endregion Public Methods (7)
