@@ -360,7 +360,7 @@ export class S3Accessor extends AbstractAccessor {
       if (hasBuffer) {
         content = await toBuffer(content);
       } else {
-        content = toBlob(content);
+        content = await toBlob(content);
       }
     }
 
