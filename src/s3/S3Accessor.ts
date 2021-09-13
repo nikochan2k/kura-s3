@@ -118,52 +118,53 @@ export class S3Accessor extends AbstractAccessor {
 
   public async doGetObject(fullPath: string): Promise<FileSystemObject> {
     const key = this.getKey(fullPath);
-    const params: ListObjectsV2Request = {
-      Bucket: this.bucket,
-      Prefix: key,
-    };
-    try {
-      var data = await this.s3.listObjectsV2(params).promise();
-    } catch (err) {
-      if ((err as AWSError).statusCode === 404) {
-        throw new NotFoundError(this.name, fullPath, err);
-      }
-      throw new NotReadableError(this.name, fullPath, err);
-    }
-    if (data.KeyCount === 0) {
-      throw new NotFoundError(this.name, fullPath);
-    }
-    for (const content of data.Contents) {
-      if (content.Key === key) {
-        return {
-          name: getName(fullPath),
-          fullPath: fullPath,
-          lastModified: content.LastModified.getTime(),
-          size: content.Size,
-        };
-      }
-    }
-    throw new NotFoundError(this.name, fullPath);
-    /*
-    try {
-      const data = await this.s3
-        .headObject({
-          Bucket: this.bucket,
-          Key: key,
-        })
-        .promise();
-      const name = key.split(DIR_SEPARATOR).pop();
-      return {
-        name,
-        fullPath: fullPath,
-        lastModified: data.LastModified.getTime(),
-        size: data.ContentLength,
+    if (this.s3Options.getObjectUsingListObject) {
+      const params: ListObjectsV2Request = {
+        Bucket: this.bucket,
+        Prefix: key,
       };
-    } catch (err) {
-      this.handleNotFoundError(fullPath, err);
-      throw new NotReadableError(this.name, fullPath, err);
+      try {
+        var data = await this.s3.listObjectsV2(params).promise();
+      } catch (err) {
+        if ((err as AWSError).statusCode === 404) {
+          throw new NotFoundError(this.name, fullPath, err);
+        }
+        throw new NotReadableError(this.name, fullPath, err);
+      }
+      if (data.KeyCount === 0) {
+        throw new NotFoundError(this.name, fullPath);
+      }
+      for (const content of data.Contents) {
+        if (content.Key === key) {
+          return {
+            name: getName(fullPath),
+            fullPath: fullPath,
+            lastModified: content.LastModified.getTime(),
+            size: content.Size,
+          };
+        }
+      }
+      throw new NotFoundError(this.name, fullPath);
+    } else {
+      try {
+        const data = await this.s3
+          .headObject({
+            Bucket: this.bucket,
+            Key: key,
+          })
+          .promise();
+        const name = key.split(DIR_SEPARATOR).pop();
+        return {
+          name,
+          fullPath: fullPath,
+          lastModified: data.LastModified.getTime(),
+          size: data.ContentLength,
+        };
+      } catch (err) {
+        this.handleNotFoundError(fullPath, err);
+        throw new NotReadableError(this.name, fullPath, err);
+      }
     }
-    */
   }
 
   public async doGetObjects(dirPath: string) {

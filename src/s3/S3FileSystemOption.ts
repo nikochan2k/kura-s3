@@ -7,6 +7,7 @@ export interface S3FileSystemOptions extends FileSystemOptions {
   noCache?: boolean;
   methodOfDoGetContent?: "xhr" | "getObject";
   methodOfDoPutContent?: "xhr" | "upload" | "uploadPart" | "putObject";
+  getObjectUsingListObject?: boolean;
   xhrOptions?: XHROptions;
 
   // #endregion Properties (3)
