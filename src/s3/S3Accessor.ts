@@ -126,9 +126,7 @@ export class S3Accessor extends AbstractAccessor {
       try {
         var data = await this.s3.listObjectsV2(params).promise();
       } catch (err) {
-        if ((err as AWSError).statusCode === 404) {
-          throw new NotFoundError(this.name, fullPath, err);
-        }
+        this.handleNotFoundError(fullPath, err);
         throw new NotReadableError(this.name, fullPath, err);
       }
       if (data.KeyCount === 0) {
@@ -317,9 +315,7 @@ export class S3Accessor extends AbstractAccessor {
     try {
       var data = await this.s3.listObjectsV2(params).promise();
     } catch (err) {
-      if ((err as AWSError).statusCode === 404) {
-        throw new NotFoundError(this.name, dirPath, err);
-      }
+      this.handleNotFoundError(dirPath, err);
       throw new NotReadableError(this.name, dirPath, err);
     }
     for (const content of data.CommonPrefixes) {
