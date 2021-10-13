@@ -51,7 +51,7 @@
   },
   "devDependencies": {
     "@types/jest": "^26.0.24",
-    "@types/node": "^16.4.13",
+    "@types/node": "^16.10.5",
     "jest": "^26.6.3",
     "npm-run-all": "^4.1.5",
     "rimraf": "^3.0.2",
@@ -59,8 +59,8 @@
     "typescript": "^4.3.5"
   },
   "dependencies": {
-    "aws-sdk": "^2.963.0",
-    "kura": "^0.3.61",
-    "tslib": "^2.3.0"
+    "aws-sdk": "^2.1006.0",
+    "kura": "^0.3.65",
+    "tslib": "^2.3.1"
   }
 }
