@@ -10,7 +10,6 @@ import {
   Flags,
   InvalidModificationError,
   NotFoundError,
-  NotImplementedError,
   onError,
   resolveToFullPath,
 } from "kura";
@@ -78,33 +77,44 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
         successCallback(this.toDirectoryEntry(obj));
       })
       .catch((err) => {
+        const name = fullPath.split(DIR_SEPARATOR).pop();
+        const accessor = this.params.accessor;
+        const entry = new S3DirectoryEntry({
+          accessor: accessor,
+          name: name,
+          fullPath: fullPath,
+        });
         if (err instanceof NotFoundError) {
-          const name = fullPath.split(DIR_SEPARATOR).pop();
-          const accessor = this.params.accessor;
-          const entry = new S3DirectoryEntry({
-            accessor: accessor,
-            name: name,
-            fullPath: fullPath,
-          });
           if (accessor.options.index) {
             const obj: FileSystemObject = {
               name: name,
               fullPath: fullPath,
             };
+            let needUpdate = false;
             accessor
-              .updateIndex(obj)
-              .then(() => {
-                successCallback(entry);
+              .getRecord(fullPath)
+              .then((value) => {
+                needUpdate = !value.record;
               })
-              .catch((err) => {
-                onError(err, errorCallback);
+              .catch((e) => {
+                if (e instanceof NotFoundError) {
+                  needUpdate = true;
+                } else {
+                  onError(e);
+                }
+              })
+              .finally(() => {
+                if (needUpdate) {
+                  accessor.updateIndex(obj).catch((e) => {
+                    onError(e);
+                  });
+                }
               });
-          } else {
-            successCallback(entry);
           }
         } else {
-          onError(err, errorCallback);
+          onError(err);
         }
+        successCallback(entry);
       });
   }
 

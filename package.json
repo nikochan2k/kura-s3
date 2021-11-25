@@ -59,8 +59,8 @@
     "typescript": "^4.3.5"
   },
   "dependencies": {
-    "aws-sdk": "^2.1006.0",
-    "kura": "^0.3.65",
+    "aws-sdk": "^2.1036.0",
+    "kura": "^0.3.66",
     "tslib": "^2.3.1"
   }
 }
