@@ -32,6 +32,11 @@ import { S3FileSystem } from "./S3FileSystem";
 import { S3FileSystemOptions } from "./S3FileSystemOption";
 import { getKey, getPrefix } from "./S3Util";
 
+interface UrlCache {
+  expirationTime: number;
+  url: string;
+}
+
 const EXPIRES = 60 * 60 * 24 * 7;
 
 const isBrowser =
@@ -47,18 +52,12 @@ const isReactNative =
 
 const hasBuffer = typeof Buffer === "function";
 
-const hasBlob = typeof Blob === "function";
-
 export class S3Accessor extends AbstractAccessor {
-  // #region Properties (3)
+  private urlCache: { [key: string]: UrlCache } = {};
 
   public filesystem: FileSystem;
   public name: string;
   public s3: S3;
-
-  // #endregion Properties (3)
-
-  // #region Constructors (1)
 
   constructor(
     private config: ClientConfiguration,
@@ -67,6 +66,9 @@ export class S3Accessor extends AbstractAccessor {
     private s3Options?: S3FileSystemOptions
   ) {
     super(s3Options);
+    if (!s3Options.expires) {
+      s3Options.expires = EXPIRES;
+    }
     if (!config.httpOptions) {
       config.httpOptions = {};
     }
@@ -84,10 +86,6 @@ export class S3Accessor extends AbstractAccessor {
     }
     this.name = this.bucket + this.rootDir;
   }
-
-  // #endregion Constructors (1)
-
-  // #region Public Methods (7)
 
   public async createIndexDir(dirPath: string) {
     let indexDir = INDEX_DIR + dirPath;
@@ -202,18 +200,45 @@ export class S3Accessor extends AbstractAccessor {
     fullPath: string,
     method?: "GET" | "POST" | "PUT" | "DELETE"
   ): Promise<string> {
+    const keysToRemove: string[] = [];
+    const now = Math.trunc(Date.now() / 1000);
+    for (const [key, cache] of Object.entries(this.urlCache)) {
+      if (cache.expirationTime <= now) {
+        keysToRemove.push(key);
+      }
+    }
+    for (const keyToRemove of keysToRemove) {
+      delete this.urlCache[keyToRemove];
+    }
+
     if (!method || method === "GET") {
-      return this.getSignedUrl(fullPath, "getObject");
+      const key = fullPath + "|get";
+      const cache = this.urlCache[key];
+      if (cache) {
+        return cache.url;
+      }
+      const url = await this.getSignedUrl(fullPath, "getObject");
+      this.urlCache[key] = {
+        expirationTime: now + this.s3Options.expires,
+        url,
+      };
+      return url;
     } else if (method === "PUT") {
-      return this.getSignedUrl(fullPath, "putObject");
+      const key = fullPath + "|put";
+      const cache = this.urlCache[key];
+      if (cache) {
+        return cache.url;
+      }
+      const url = await this.getSignedUrl(fullPath, "putObject");
+      this.urlCache[key] = {
+        expirationTime: now + this.s3Options.expires,
+        url,
+      };
+      return url;
     } else {
       return null;
     }
   }
-
-  // #endregion Public Methods (7)
-
-  // #region Protected Methods (6)
 
   protected doWriteArrayBuffer(
     fullPath: string,
@@ -268,10 +293,6 @@ export class S3Accessor extends AbstractAccessor {
       indexOptions.logicalDelete = false;
     }
   }
-
-  // #endregion Protected Methods (6)
-
-  // #region Private Methods (14)
 
   private async doReadContentUsingGetObject(fullPath: string) {
     try {
@@ -506,7 +527,7 @@ export class S3Accessor extends AbstractAccessor {
     const url = await this.s3.getSignedUrlPromise(operation, {
       Bucket: this.bucket,
       Key: key,
-      Expires: EXPIRES,
+      Expires: this.s3Options.expires,
     });
     return url;
   }
@@ -544,6 +565,4 @@ export class S3Accessor extends AbstractAccessor {
 
     return toBlob(content);
   }
-
-  // #endregion Private Methods (14)
 }
