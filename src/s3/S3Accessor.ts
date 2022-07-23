@@ -75,6 +75,7 @@ export class S3Accessor extends AbstractAccessor {
       config.httpOptions.timeout = 1000;
       config.httpOptions.connectTimeout = 1000;
     }
+    config.s3ForcePathStyle = true;
     config.signatureVersion = "v4";
     this.s3 = new S3(config);
     this.filesystem = new S3FileSystem(this);
@@ -203,7 +204,7 @@ export class S3Accessor extends AbstractAccessor {
   ): Promise<string> {
     if (!method || method === "GET") {
       return this.getSignedUrl(fullPath, "getObject");
-    } else if (method === "POST" || method === "PUT") {
+    } else if (method === "PUT") {
       return this.getSignedUrl(fullPath, "putObject");
     } else {
       return null;
