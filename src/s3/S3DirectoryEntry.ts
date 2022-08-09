@@ -11,21 +11,16 @@ import {
   InvalidModificationError,
   NotFoundError,
   onError,
+  PathExistsError,
   resolveToFullPath,
 } from "kura";
 import { S3Accessor } from "./S3Accessor";
 import { S3FileEntry } from "./S3FileEntry";
 
 export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
-  // #region Constructors (1)
-
   constructor(params: FileSystemParams<S3Accessor>) {
     super(params);
   }
-
-  // #endregion Constructors (1)
-
-  // #region Public Methods (1)
 
   public getDirectory(
     path: string,
@@ -50,9 +45,9 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
           successCallback = () => {};
         }
 
-        if (obj.size != null) {
+        if (obj.size != null && 0 < obj.size) {
           onError(
-            new InvalidModificationError(
+            new PathExistsError(
               this.filesystem.name,
               fullPath,
               `${fullPath} is not a directory`
@@ -118,10 +113,6 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
       });
   }
 
-  // #endregion Public Methods (1)
-
-  // #region Protected Methods (3)
-
   protected createEntry(obj: FileSystemObject) {
     return obj.size != null
       ? new S3FileEntry({
@@ -147,6 +138,4 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
       ...obj,
     });
   }
-
-  // #endregion Protected Methods (3)
 }
