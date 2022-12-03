@@ -100,9 +100,11 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
               })
               .finally(() => {
                 if (needUpdate) {
-                  accessor.updateIndex(obj).catch((e) => {
-                    onError(e);
-                  });
+                  accessor
+                    .saveRecord(obj.fullPath, obj.lastModified)
+                    .catch((e) => {
+                      onError(e);
+                    });
                 }
               });
           }

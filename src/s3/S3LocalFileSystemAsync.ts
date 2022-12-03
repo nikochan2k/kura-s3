@@ -4,8 +4,6 @@ import { S3FileSystemOptions } from "./S3FileSystemOption";
 import { S3LocalFileSystem } from "./S3LocalFileSystem";
 
 export class S3LocalFileSystemAsync extends LocalFileSystemAsync {
-  // #region Constructors (1)
-
   constructor(
     config: S3.ClientConfiguration,
     bucket: string,
@@ -14,6 +12,4 @@ export class S3LocalFileSystemAsync extends LocalFileSystemAsync {
   ) {
     super(new S3LocalFileSystem(config, bucket, rootDir, s3Option));
   }
-
-  // #endregion Constructors (1)
 }

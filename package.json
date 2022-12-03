@@ -1,6 +1,6 @@
 {
   "name": "kura-s3",
-  "version": "0.3.57",
+  "version": "0.4.9",
   "description": "The FileSystem API abstraction library, AWS S3 Plugin",
   "author": "Yoshihiro Seki",
   "license": "MIT",
@@ -60,7 +60,7 @@
   },
   "dependencies": {
     "aws-sdk": "^2.1195.0",
-    "kura": "^0.3.70",
+    "kura": "^0.4.25",
     "tslib": "^2.4.0"
   }
 }
