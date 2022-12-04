@@ -179,7 +179,7 @@ export class S3Accessor extends AbstractAccessor {
     return objects;
   }
 
-  public async doMakeDirectory(obj: FileSystemObject) {
+  public async doMakeDirectory(_fullPath: string) {
     // NOOP
   }
 
