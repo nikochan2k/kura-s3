@@ -15,7 +15,7 @@ import {
   FileSystem,
   FileSystemObject,
   getName,
-  INDEX_DIR,
+  INDEX_DIR_PATH,
   InvalidModificationError,
   isBlob,
   normalizePath,
@@ -88,7 +88,7 @@ export class S3Accessor extends AbstractAccessor {
   }
 
   public async createIndexDir(dirPath: string) {
-    let indexDir = INDEX_DIR + dirPath;
+    let indexDir = INDEX_DIR_PATH + dirPath;
     if (!indexDir.endsWith(DIR_SEPARATOR)) {
       indexDir += DIR_SEPARATOR;
     }
