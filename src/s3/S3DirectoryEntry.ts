@@ -88,9 +88,6 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
             let needUpdate = false;
             accessor
               .getRecord(fullPath)
-              .then((value) => {
-                needUpdate = !value.record;
-              })
               .catch((e) => {
                 if (e instanceof NotFoundError) {
                   needUpdate = true;
