@@ -95,13 +95,14 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
                   onError(e);
                 }
               })
-              .finally(() => {
+              .finally(async () => {
                 if (needUpdate) {
-                  accessor
-                    .saveRecord(obj.fullPath, obj.lastModified)
-                    .catch((e) => {
-                      onError(e);
-                    });
+                  try {
+                    const record = await accessor.createRecord(obj);
+                    await accessor.saveRecord(obj.fullPath, record);
+                  } catch (e) {
+                    onError(e);
+                  }
                 }
               });
           }
