@@ -125,7 +125,7 @@ export class S3Accessor extends AbstractAccessor {
       try {
         var data = await this.s3.listObjectsV2(params).promise();
       } catch (err) {
-        this.handleNotFoundError(fullPath, err);
+        this.handleNotFoundErrorS3(fullPath, err);
         throw new NotReadableError(this.name, fullPath, err);
       }
       if (data.KeyCount === 0) {
@@ -158,7 +158,7 @@ export class S3Accessor extends AbstractAccessor {
           size: data.ContentLength,
         };
       } catch (err) {
-        this.handleNotFoundError(fullPath, err);
+        this.handleNotFoundErrorS3(fullPath, err);
         throw new NotReadableError(this.name, fullPath, err);
       }
     }
@@ -308,7 +308,7 @@ export class S3Accessor extends AbstractAccessor {
       const data = await this.s3.getObject(req).promise();
       return this.fromBody(data.Body);
     } catch (err) {
-      this.handleNotFoundError(fullPath, err);
+      this.handleNotFoundErrorS3(fullPath, err);
       throw new NotReadableError(this.name, fullPath, err);
     }
   }
@@ -337,7 +337,7 @@ export class S3Accessor extends AbstractAccessor {
     try {
       var data = await this.s3.listObjectsV2(params).promise();
     } catch (err) {
-      this.handleNotFoundError(dirPath, err);
+      this.handleNotFoundErrorS3(dirPath, err);
       throw new NotReadableError(this.name, dirPath, err);
     }
     for (const content of data.CommonPrefixes) {
@@ -532,7 +532,7 @@ export class S3Accessor extends AbstractAccessor {
     return url;
   }
 
-  private handleNotFoundError(fullPath: string, err: any) {
+  private handleNotFoundErrorS3(fullPath: string, err: any) {
     if (this.isNotFoundError(err)) {
       throw new NotFoundError(this.name, fullPath, err);
     }
