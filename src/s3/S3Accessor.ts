@@ -115,7 +115,14 @@ export class S3Accessor extends AbstractAccessor {
     }
   }
 
-  public async doGetObject(fullPath: string): Promise<FileSystemObject> {
+  public async doGetObject(
+    fullPath: string,
+    isFile: boolean
+  ): Promise<FileSystemObject> {
+    if (!isFile) {
+      return { name: getName(fullPath), fullPath, lastModified: Date.now() };
+    }
+
     const key = this.getKey(fullPath);
     if (this.s3Options.getObjectUsingListObject) {
       const params: ListObjectsV2Request = {
