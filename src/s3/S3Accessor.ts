@@ -6,6 +6,7 @@ import S3, {
   CreateMultipartUploadRequest,
   DeleteObjectRequest,
   GetObjectRequest,
+  ListObjectsV2Output,
   ListObjectsV2Request,
   UploadPartRequest,
 } from "aws-sdk/clients/s3";
@@ -87,7 +88,7 @@ export class S3Accessor extends AbstractAccessor {
     this.name = this.bucket + this.rootDir;
   }
 
-  public async createIndexDir(dirPath: string) {
+  public createIndexDir(dirPath: string) {
     let indexDir = INDEX_DIR_PATH + dirPath;
     if (!indexDir.endsWith(DIR_SEPARATOR)) {
       indexDir += DIR_SEPARATOR;
@@ -129,8 +130,9 @@ export class S3Accessor extends AbstractAccessor {
         Bucket: this.bucket,
         Prefix: key,
       };
+      let data: ListObjectsV2Output;
       try {
-        var data = await this.s3.listObjectsV2(params).promise();
+        data = await this.s3.listObjectsV2(params).promise();
       } catch (err) {
         this.handleNotFoundErrorS3(fullPath, err);
         throw new NotReadableError(this.name, fullPath, err);
@@ -194,6 +196,7 @@ export class S3Accessor extends AbstractAccessor {
     fullPath: string
   ): Promise<Blob | BufferSource | string> {
     if (this.s3Options.methodOfDoGetContent === "xhr") {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return await this.doReadContentUsingXHR(
         fullPath,
         isBrowser ? "blob" : "arraybuffer"
@@ -341,8 +344,9 @@ export class S3Accessor extends AbstractAccessor {
     path: string,
     objects: FileSystemObject[]
   ) {
+    let data: ListObjectsV2Output;
     try {
-      var data = await this.s3.listObjectsV2(params).promise();
+      data = await this.s3.listObjectsV2(params).promise();
     } catch (err) {
       this.handleNotFoundErrorS3(dirPath, err);
       throw new NotReadableError(this.name, dirPath, err);
@@ -410,7 +414,7 @@ export class S3Accessor extends AbstractAccessor {
     const key = this.getKey(fullPath);
     const contentLength = isBlob(content) ? content.size : content.byteLength;
     try {
-      const data = await this.s3
+      await this.s3
         .putObject({
           Bucket: this.bucket,
           Key: key,
@@ -514,8 +518,10 @@ export class S3Accessor extends AbstractAccessor {
 
   private async fromBody(body: any): Promise<BufferSource | Blob | string> {
     if (isReactNative) {
-      return toArrayBuffer(body);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      return await toArrayBuffer(body);
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return body;
     }
   }
@@ -550,6 +556,7 @@ export class S3Accessor extends AbstractAccessor {
       return false;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const awsError: AWSError = err;
     if (awsError.statusCode === 404) {
       return true;

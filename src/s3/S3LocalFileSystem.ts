@@ -17,7 +17,7 @@ export class S3LocalFileSystem extends AbstractLocalFileSystem {
   }
 
   protected createAccessor(): Promise<AbstractAccessor> {
-    return new Promise<S3Accessor>((resolve, reject) => {
+    return new Promise<S3Accessor>((resolve) => {
       const accessor = new S3Accessor(
         this.config,
         this.bucket,

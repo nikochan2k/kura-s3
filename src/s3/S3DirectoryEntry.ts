@@ -32,7 +32,7 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
 
     this.params.accessor
       .getObject(fullPath, false)
-      .then(async (obj) => {
+      .then((obj) => {
         if (fullPath === DIR_SEPARATOR) {
           successCallback(this.filesystem.root);
           return;
@@ -42,7 +42,9 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
           options = {};
         }
         if (!successCallback) {
-          successCallback = () => {};
+          successCallback = () => {
+            // noop
+          };
         }
 
         if (obj.size != null && 0 < obj.size) {
@@ -57,18 +59,6 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
           return;
         }
 
-        if (options.create) {
-          if (options.exclusive) {
-            onError(
-              new InvalidModificationError(
-                fullPath,
-                `${fullPath} already exists`
-              ),
-              errorCallback
-            );
-            return;
-          }
-        }
         successCallback(this.toDirectoryEntry(obj));
       })
       .catch((err) => {
@@ -85,26 +75,18 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
               name: name,
               fullPath: fullPath,
             };
-            let needUpdate = false;
-            accessor
-              .getRecord(fullPath)
-              .catch((e) => {
-                if (e instanceof NotFoundError) {
-                  needUpdate = true;
-                } else {
+            accessor.getRecord(fullPath).catch(async (e) => {
+              if (e instanceof NotFoundError) {
+                try {
+                  const record = await accessor.createRecord(obj);
+                  await accessor.saveRecord(obj.fullPath, record);
+                } catch (e) {
                   onError(e);
                 }
-              })
-              .finally(async () => {
-                if (needUpdate) {
-                  try {
-                    const record = await accessor.createRecord(obj);
-                    await accessor.saveRecord(obj.fullPath, record);
-                  } catch (e) {
-                    onError(e);
-                  }
-                }
-              });
+              } else {
+                onError(e);
+              }
+            });
           }
         } else {
           onError(err);
