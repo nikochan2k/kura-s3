@@ -63,34 +63,41 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
       .catch((err) => {
         const name = fullPath.split(DIR_SEPARATOR).pop();
         const accessor = this.params.accessor;
-        const entry = new S3DirectoryEntry({
-          accessor: accessor,
-          name: name,
-          fullPath: fullPath,
-        });
         if (err instanceof NotFoundError) {
+          const entry = new S3DirectoryEntry({
+            accessor: accessor,
+            name: name,
+            fullPath: fullPath,
+          });
           if (accessor.options.index) {
             const obj: FileSystemObject = {
               name: name,
               fullPath: fullPath,
             };
-            accessor.getRecord(fullPath).catch(async (e) => {
-              if (e instanceof NotFoundError) {
-                try {
-                  const record = await accessor.createRecord(obj);
-                  await accessor.saveRecord(obj.fullPath, record);
-                } catch (e) {
+            accessor
+              .getRecord(fullPath)
+              .then(() => {
+                successCallback(entry);
+              })
+              .catch(async (e) => {
+                if (e instanceof NotFoundError) {
+                  try {
+                    const record = await accessor.createRecord(obj);
+                    await accessor.saveRecord(obj.fullPath, record);
+                    successCallback(entry);
+                  } catch (e) {
+                    onError(e, errorCallback);
+                  }
+                } else {
                   onError(e, errorCallback);
                 }
-              } else {
-                onError(e, errorCallback);
-              }
-            });
+              });
+          } else {
+            successCallback(entry);
           }
         } else {
           onError(err, errorCallback);
         }
-        successCallback(entry);
       });
   }
 
