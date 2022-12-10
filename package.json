@@ -58,7 +58,7 @@
     "eslint": "^8.29.0",
     "eslint-config-prettier": "^8.5.0",
     "jest": "^26.6.3",
-    "kura": "^0.4.75",
+    "kura": "^0.4.77",
     "npm-run-all": "^4.1.5",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.5.6",

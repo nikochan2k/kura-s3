@@ -8,7 +8,6 @@ import {
   FileSystemObject,
   FileSystemParams,
   Flags,
-  InvalidModificationError,
   NotFoundError,
   onError,
   PathExistsError,
@@ -81,15 +80,15 @@ export class S3DirectoryEntry extends AbstractDirectoryEntry<S3Accessor> {
                   const record = await accessor.createRecord(obj);
                   await accessor.saveRecord(obj.fullPath, record);
                 } catch (e) {
-                  onError(e);
+                  onError(e, errorCallback);
                 }
               } else {
-                onError(e);
+                onError(e, errorCallback);
               }
             });
           }
         } else {
-          onError(err);
+          onError(err, errorCallback);
         }
         successCallback(entry);
       });
