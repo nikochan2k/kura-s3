@@ -24,7 +24,7 @@
   "scripts": {
     "clean": "rimraf ./lib",
     "compile": "tsc",
-    "copy": "cpx \"src/**/*.ts\" lib -i \"src/**/*.spec.ts\"",
+    "copy": "cpx \"src/**/*.ts\" lib",
     "build": "npm-run-all clean compile copy",
     "npm-version": "npm version patch",
     "npm-publish": "npm publish",
